@@ -15,15 +15,16 @@ class HotKeyType(IntEnum):
 
 
 class HotKey:
-    def __init__(self, trigger, keys, count=2, interval=0.5):
+    def __init__(self, _id, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         if callable(trigger):
             self.__trigger = trigger
         else:
             raise TypeError('Wrong type, "trigger" must be a function.')
-        if not isinstance(keys, list):
+        if not isinstance(keys, (list, set)):
             raise TypeError('Wrong type, "keys" must be a list, '
-                            'and the type of its element must be "pynput.keyboard.Key", int or char.')
-        keys = set(keys)
+                            'and the type of its element must be "PyHotKey.Key", int or char.')
+        if isinstance(keys, list):
+            keys = set(keys)
         try:
             self.__keys = [key if isinstance(key, Key) else KeyCode(char=key[0]) for key in keys]
         except Exception:
@@ -44,14 +45,24 @@ class HotKey:
         else:
             self.__count = 2
             self.__interval = 0.5
+        self.__id = _id
+        self.__args = args
+        self.__kwargs = kwargs
 
     def __eq__(self, o):
-        if isinstance(o, self.__class__) and len(self.__keys) == len(o.keys):
-            return all([a == b for a, b in zip(sorted(self.__keys), sorted(o.keys))])
+        if isinstance(o, self.__class__):
+            return self.__id == o.id
         return False
 
+    def __repr__(self):
+        return '<HotKey id: {} keys: ({})>'.format(self.__id, ','.join([repr(key) for key in self.__keys]))
+
     def trigger(self):
-        return self.__trigger()
+        return self.__trigger(*self.__args, **self.__kwargs)
+
+    @property
+    def id(self):
+        return self.__id
 
     @property
     def type(self):
@@ -73,44 +84,64 @@ class HotKey:
 class HotKeyManager:
     def __init__(self):
         self.__id = 1
-        self.__hot_keys = {}
+        self.__hot_keys = []
         self.__pressed_keys = []
         self.__released_keys = []
         self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release)
 
-    def RegisterHotKey(self, trigger, keys, count=2, interval=0.5):
+    def RegisterHotKey(self, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         """
         :param trigger: the function called when hot key is triggered.
         :param list keys: key list.
         :param int count: the press times of hot key. Only for single type hot key.
         :param float interval: the interval time between presses, unit: second. Only for single type hot key.
+        :param args: the arguments of trigger.
+        :param kwargs: the keyword arguments of trigger.
         :return: if successful, return id, else return -1. You can use this id to unregister hot key.
         :rtype: int.
         """
-        hot_key = HotKey(trigger, keys, count, interval)
-        if hot_key in self.__hot_keys.values():
+        keys = set(keys)
+        if any([key.keys == keys for key in self.__hot_keys]):
             return -1
-        else:
-            self.__hot_keys[self.__id] = hot_key
-            self.__id += 1
-            return self.__id - 1
+        try:
+            hot_key = HotKey(self.__id, trigger, keys, count, interval, *args, **kwargs)
+        except (TypeError, ValueError):
+            return -1
+        self.__hot_keys.append(hot_key)
+        self.__id += 1
+        return self.__id - 1
 
     def UnregisterHotKey(self, key_id):
         """
         :param key_id: the id of the hot key you want to unregister.
         :rtype: bool.
         """
-        return True if self.__hot_keys.pop(key_id) else False
+        for key in self.__hot_keys:
+            if key_id == key.id:
+                self.__hot_keys.remove(key)
+                return True
+        return False
+
+    @staticmethod
+    def __exec_trigger(hot_key):
+        try:
+            return hot_key.trigger()
+        except Exception as e:
+            print('Exception in {}:\n{}: {}\n'.format(hot_key, type(e), e))
 
     def __on_press(self, key):
+        if key in self.__pressed_keys:
+            return
         self.__pressed_keys.append(key)
-        for hot_key in self.__hot_keys.values():
+        print('【pressed】{}'.format(key))
+        for hot_key in self.__hot_keys:
             if HotKeyType.MULTIPLE == hot_key.type and all([key in self.__pressed_keys for key in hot_key.keys]):
-                hot_key.trigger()
+                self.__exec_trigger(hot_key)
 
     def __on_release(self, key):
         self.__pressed_keys.remove(key)
-        for k in self.__hot_keys.values():
+        print('【released】{}'.format(key))
+        for k in self.__hot_keys:
             if HotKeyType.SINGLE == k.type and key in k.keys:
                 hot_key = k
                 break
@@ -129,7 +160,7 @@ class HotKeyManager:
                 n += 1
         if hot_key.count == n:
             self.__released_keys = [rk for rk in self.__released_keys if key != rk.get('key')]
-            hot_key.trigger()
+            self.__exec_trigger(hot_key)
 
     @property
     def suppress(self):
