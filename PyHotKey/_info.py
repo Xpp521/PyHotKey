@@ -4,4 +4,4 @@
 # @Email   : Xpp233@foxmail.com
 AUTHOR = 'Xpp'
 AUTHOR_EMAIL = 'Xpp233@foxmail.com'
-VERSION = 1.1.0
+VERSION = '1.1.1'

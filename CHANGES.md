@@ -1,4 +1,7 @@
 # Release Note
+### v1.1.1
+- Remove log message.
+___
 ### v1.1.0
 - Currently, the trigger function supports arguments.
 - No longer need to call manager.start() manually.

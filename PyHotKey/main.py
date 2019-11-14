@@ -133,14 +133,12 @@ class HotKeyManager:
         if key in self.__pressed_keys:
             return
         self.__pressed_keys.append(key)
-        print('【pressed】{}'.format(key))
         for hot_key in self.__hot_keys:
             if HotKeyType.MULTIPLE == hot_key.type and all([key in self.__pressed_keys for key in hot_key.keys]):
                 self.__exec_trigger(hot_key)
 
     def __on_release(self, key):
         self.__pressed_keys.remove(key)
-        print('【released】{}'.format(key))
         for k in self.__hot_keys:
             if HotKeyType.SINGLE == k.type and key in k.keys:
                 hot_key = k
