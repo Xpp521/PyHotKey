@@ -1,4 +1,9 @@
 # Release Note
+### v1.2.0
+- Add logger.
+- Optimize code.
+- Attempt to fix a potential bug.
+___
 ### v1.1.1
 - Remove log message.
 ___

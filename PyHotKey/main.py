@@ -5,6 +5,7 @@
 from time import time
 from enum import IntEnum
 from pynput.keyboard import Listener, Key, KeyCode
+from logging import getLogger, DEBUG, WARNING, StreamHandler, FileHandler, Formatter
 
 
 class HotKeyType(IntEnum):
@@ -20,16 +21,12 @@ class HotKey:
             self.__trigger = trigger
         else:
             raise TypeError('Wrong type, "trigger" must be a function.')
-        if not isinstance(keys, (list, set)):
-            raise TypeError('Wrong type, "keys" must be a list, '
-                            'and the type of its element must be "PyHotKey.Key", int or char.')
-        if isinstance(keys, list):
-            keys = set(keys)
         try:
+            keys = set(keys)
             self.__keys = [key if isinstance(key, Key) else KeyCode(char=key[0]) for key in keys]
         except Exception:
-            raise TypeError('Wrong type, "keys" must be a list, '
-                            'and the type of its element must be "pynput.keyboard.Key", int or char.')
+            raise TypeError('Wrong type, "keys" must be a list, tuple or set, '
+                            'and the type of its element must be "PyHotKey.Key" or char.')
         if not self.__keys:
             raise ValueError('Wrong value, "keys" must be a Non empty list.')
         self.__type = HotKeyType.SINGLE if 1 == len(self.__keys) else HotKeyType.MULTIPLE
@@ -55,7 +52,11 @@ class HotKey:
         return False
 
     def __repr__(self):
-        return '<HotKey id: {} keys: ({})>'.format(self.__id, ','.join([repr(key) for key in self.__keys]))
+        t = []
+        for key in self.__keys:
+            name = repr(key)
+            t.append(name[name.find('.') + 1: name.find(':')] if '<' == name[0] else name.replace("'", ''))
+        return '<HotKey id:{} keys:[{}]>'.format(self.__id, ', '.join(t))
 
     def trigger(self):
         return self.__trigger(*self.__args, **self.__kwargs)
@@ -87,7 +88,25 @@ class HotKeyManager:
         self.__hot_keys = []
         self.__pressed_keys = []
         self.__released_keys = []
-        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release)
+        self.__logger = getLogger()
+        self.__logger.addHandler(StreamHandler())
+        self.__logger.addHandler(FileHandler('PyHotKeyLog.log', encoding='utf8'))
+        formatter = Formatter('[%(asctime)s]%(message)s')
+        for handler in self.__logger.handlers:
+            handler.setFormatter(formatter)
+        self.logger = False
+        self.__listener = Listener(on_press=self.__on_pressed, on_release=self.__on_released)
+
+    @property
+    def logger(self):
+        return False if DEBUG > self.__logger.level else True
+
+    @logger.setter
+    def logger(self, value):
+        if value:
+            self.__logger.setLevel(DEBUG)
+        else:
+            self.__logger.setLevel(WARNING)
 
     def RegisterHotKey(self, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         """
@@ -102,13 +121,18 @@ class HotKeyManager:
         """
         keys = set(keys)
         if any([key.keys == keys for key in self.__hot_keys]):
+            self.__logger.info('【Register failed】{}: This hot key has been registered'.format(keys))
             return -1
         try:
             hot_key = HotKey(self.__id, trigger, keys, count, interval, *args, **kwargs)
-        except (TypeError, ValueError):
+        except Exception as e:
+            e_type = str(type(e))
+            self.__logger.info('''【Register failed】{}:
+{}: {}'''.format(keys, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
             return -1
         self.__hot_keys.append(hot_key)
         self.__id += 1
+        self.__logger.info('【Register succeed】{}'.format(hot_key))
         return self.__id - 1
 
     def UnregisterHotKey(self, key_id):
@@ -116,29 +140,36 @@ class HotKeyManager:
         :param key_id: the id of the hot key you want to unregister.
         :rtype: bool.
         """
-        for key in self.__hot_keys:
-            if key_id == key.id:
-                self.__hot_keys.remove(key)
-                return True
+        if isinstance(key_id, int) and 0 < key_id < self.__id:
+            for key in self.__hot_keys:
+                if key_id == key.id:
+                    self.__hot_keys.remove(key)
+                    self.__logger.info('【Unregister succeed】{}'.format(key))
+                    return True
+        self.__logger.info("【Unregister failed】the hot key id: {} doesn't exist".format(key_id))
         return False
 
-    @staticmethod
-    def __exec_trigger(hot_key):
+    def __exec_trigger(self, hot_key):
         try:
             return hot_key.trigger()
         except Exception as e:
-            print('Exception in {}:\n{}: {}\n'.format(hot_key, type(e), e))
+            e_type = str(type(e))
+            self.__logger.error('''【Exception】in {}'s trigger function:
+{}: {}'''.format(hot_key, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
 
-    def __on_press(self, key):
+    def __on_pressed(self, key):
         if key in self.__pressed_keys:
             return
         self.__pressed_keys.append(key)
+        self.__logger.debug('【key pressed】{}'.format(key))
         for hot_key in self.__hot_keys:
             if HotKeyType.MULTIPLE == hot_key.type and all([key in self.__pressed_keys for key in hot_key.keys]):
                 self.__exec_trigger(hot_key)
 
-    def __on_release(self, key):
-        self.__pressed_keys.remove(key)
+    def __on_released(self, key):
+        if key in self.__pressed_keys:
+            self.__pressed_keys.remove(key)
+        self.__logger.debug('【key released】{}'.format(key))
         for k in self.__hot_keys:
             if HotKeyType.SINGLE == k.type and key in k.keys:
                 hot_key = k

@@ -1,47 +1,47 @@
 from os.path import join, dirname
 from setuptools import setup, find_packages
 
-#: The name of the package on PyPi
+# The name of the package on PyPi
 PYPI_PACKAGE_NAME = 'PyHotKey'
 
-#: The name of the main Python package
+# The name of the main Python package
 MAIN_PACKAGE_NAME = 'PyHotKey'
 
-#: The package URL
+# The package URL
 PACKAGE_URL = 'https://github.com/Xpp521/PyHotKey'
 
-#: The runtime requirements
+# The runtime requirements
 RUNTIME_PACKAGES = ['pynput>=1.4.5']
 
-#: Additional requirements used during setup
+# Additional requirements used during setup
 SETUP_PACKAGES = []
 
-#: Packages requires for different environments
+# Packages requires for different environments
 EXTRA_PACKAGES = {}
 
-# Read globals from ._info without loading it
+ROOT = dirname(__file__)
+
+# Load author and version message
 INFO = {}
-with open(join(dirname(__file__), MAIN_PACKAGE_NAME, '_info.py')) as f:
+with open(join(ROOT, MAIN_PACKAGE_NAME, '_info.py')) as f:
     for line in f:
         data = line.rstrip().replace(' ', '').replace("'", '').split('=')
         if 2 == len(data):
             INFO[data[0]] = data[1]
 
-# Load the read me
+# Load README.md
 try:
-    with open(join(dirname(__file__), 'README.md')) as f:
+    with open(join(ROOT, 'README.md')) as f:
         README = f.read()
 except IOError:
     README = ''
 
-
-# Load the release notes
+# Load CHANGES.md
 try:
-    with open(join(dirname(__file__), 'CHANGES.md')) as f:
+    with open(join(ROOT, 'CHANGES.md')) as f:
         CHANGES = f.read()
 except IOError:
     CHANGES = ''
-
 
 setup(name=PYPI_PACKAGE_NAME,
       version=INFO.get('VERSION'),
@@ -56,7 +56,8 @@ setup(name=PYPI_PACKAGE_NAME,
                     'Tracker': 'https://github.com/Xpp521/PyHotKey/issues'},
       license='LGPLv3',
       keywords=['hotkey', 'hot', 'key'],
-      packages=find_packages(),
+      packages=find_packages(join(ROOT, MAIN_PACKAGE_NAME)),
+      # package_dir={'': MAIN_PACKAGE_NAME},
       install_requires=RUNTIME_PACKAGES,
       setup_requires=SETUP_PACKAGES,
       extras_require=EXTRA_PACKAGES,
@@ -77,6 +78,6 @@ setup(name=PYPI_PACKAGE_NAME,
                    'Programming Language :: Python :: 3.6',
                    'Programming Language :: Python :: 3.7',
                    'Programming Language :: Python :: 3.8',
+                   'Programming Language :: Python :: 3.9',
                    'Topic :: Software Development :: Libraries :: Python Modules',
                    ])
-# python setup.py sdist bdist_wheel --universal

@@ -11,4 +11,3 @@ gen
 
 build/*
 dist/*
-test.py
