@@ -1,4 +1,8 @@
 # Release Note
+### v1.3.0
+- Currently, users can customize the log path.
+- Optimize code.
+___
 ### v1.2.0
 - Add logger.
 - Optimize code.

@@ -6,14 +6,14 @@ from os import listdir
 from shutil import rmtree, move
 from subprocess import Popen, PIPE
 from sys import executable, exec_prefix
-from os.path import join, dirname, isdir
+from os.path import join, dirname, isdir, pardir
 
 
 # The current directory
 CUR_DIR = dirname(__file__)
 
 # The root directory
-ROOT = dirname(CUR_DIR)
+ROOT = join(CUR_DIR, pardir)
 
 # The path of twine.exe
 TWINE = join(exec_prefix, 'Scripts', 'twine.exe')
@@ -60,7 +60,7 @@ def pack():
     """
     Pack a new release.
     """
-    print(exec_cmd(executable, join(ROOT, 'setup.py'), 'sdist', 'bdist_wheel', '--universal'))
+    print(exec_cmd(executable, join(ROOT, 'setup.py'), 'sdist', 'bdist_wheel'))
     for p in listdir(CUR_DIR):
         if isdir(p):
             move(join(CUR_DIR, p), join(ROOT, p))

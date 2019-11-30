@@ -3,16 +3,16 @@
 # @Author  : Xpp
 # @Email   : Xpp233@foxmail.com
 from time import time
-from enum import IntEnum
 from pynput.keyboard import Listener, Key, KeyCode
 from logging import getLogger, DEBUG, WARNING, StreamHandler, FileHandler, Formatter
 
 
-class HotKeyType(IntEnum):
-    # single key
-    SINGLE = 1
-    # multiple keys
-    MULTIPLE = 2
+# class HotKeyType(IntEnum):
+#     """Deprecated class."""
+#     # single key
+#     SINGLE = 1
+#     # multiple keys
+#     MULTIPLE = 2
 
 
 class HotKey:
@@ -29,8 +29,7 @@ class HotKey:
                             'and the type of its element must be "PyHotKey.Key" or char.')
         if not self.__keys:
             raise ValueError('Wrong value, "keys" must be a Non empty list.')
-        self.__type = HotKeyType.SINGLE if 1 == len(self.__keys) else HotKeyType.MULTIPLE
-        if HotKeyType.SINGLE == self.__type:
+        if 1 == len(self.__keys):
             if isinstance(count, int) and 0 < count:
                 self.__count = count
             else:
@@ -66,10 +65,6 @@ class HotKey:
         return self.__id
 
     @property
-    def type(self):
-        return self.__type
-
-    @property
     def keys(self):
         return self.__keys
 
@@ -89,13 +84,13 @@ class HotKeyManager:
         self.__pressed_keys = []
         self.__released_keys = []
         self.__logger = getLogger()
-        self.__logger.addHandler(StreamHandler())
-        self.__logger.addHandler(FileHandler('PyHotKeyLog.log', encoding='utf8'))
-        formatter = Formatter('[%(asctime)s]%(message)s')
-        for handler in self.__logger.handlers:
-            handler.setFormatter(formatter)
+        self.__file_handler = ''
+        self.__formatter = Formatter('[%(asctime)s]%(message)s')
+        stream_handler = StreamHandler()
+        stream_handler.setFormatter(self.__formatter)
+        self.__logger.addHandler(stream_handler)
         self.logger = False
-        self.__listener = Listener(on_press=self.__on_pressed, on_release=self.__on_released)
+        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release)
 
     @property
     def logger(self):
@@ -105,18 +100,38 @@ class HotKeyManager:
     def logger(self, value):
         if value:
             self.__logger.setLevel(DEBUG)
+            self.setLogPath('PyHotKeyLog.log')
         else:
             self.__logger.setLevel(WARNING)
 
+    def setLogPath(self, path):
+        """
+        Set the log path, only works when the user turns on the logger.
+        :param path: the path of log.
+        :rtype: bool.
+        """
+        if self.logger:
+            try:
+                file_handler = FileHandler(path, encoding='utf8')
+            except FileNotFoundError:
+                return False
+            file_handler.setFormatter(self.__formatter)
+            if 1 < len(self.__logger.handlers):
+                self.__logger.removeHandler(self.__file_handler)
+            self.__logger.addHandler(file_handler)
+            self.__file_handler = file_handler
+            return True
+        return False
+
     def RegisterHotKey(self, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         """
-        :param trigger: the function called when hot key is triggered.
+        :param trigger: the function called when the hot key is triggered.
         :param list keys: key list.
         :param int count: the press times of hot key. Only for single type hot key.
         :param float interval: the interval time between presses, unit: second. Only for single type hot key.
         :param args: the arguments of trigger.
         :param kwargs: the keyword arguments of trigger.
-        :return: if successful, return id, else return -1. You can use this id to unregister hot key.
+        :return: if successful, return a key id, else return -1.
         :rtype: int.
         """
         keys = set(keys)
@@ -137,7 +152,7 @@ class HotKeyManager:
 
     def UnregisterHotKey(self, key_id):
         """
-        :param key_id: the id of the hot key you want to unregister.
+        :param key_id: id of the hot key to be unregistered.
         :rtype: bool.
         """
         if isinstance(key_id, int) and 0 < key_id < self.__id:
@@ -157,21 +172,21 @@ class HotKeyManager:
             self.__logger.error('''【Exception】in {}'s trigger function:
 {}: {}'''.format(hot_key, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
 
-    def __on_pressed(self, key):
+    def __on_press(self, key):
         if key in self.__pressed_keys:
             return
         self.__pressed_keys.append(key)
         self.__logger.debug('【key pressed】{}'.format(key))
         for hot_key in self.__hot_keys:
-            if HotKeyType.MULTIPLE == hot_key.type and all([key in self.__pressed_keys for key in hot_key.keys]):
+            if 1 < len(hot_key.keys) and all([key in self.__pressed_keys for key in hot_key.keys]):
                 self.__exec_trigger(hot_key)
 
-    def __on_released(self, key):
+    def __on_release(self, key):
         if key in self.__pressed_keys:
             self.__pressed_keys.remove(key)
         self.__logger.debug('【key released】{}'.format(key))
         for k in self.__hot_keys:
-            if HotKeyType.SINGLE == k.type and key in k.keys:
+            if 1 == len(k.keys) and key in k.keys:
                 hot_key = k
                 break
         else:
@@ -192,6 +207,10 @@ class HotKeyManager:
             self.__exec_trigger(hot_key)
 
     @property
+    def hot_keys(self):
+        return self.__hot_keys
+
+    @property
     def suppress(self):
         return self.__listener.suppress
 
@@ -210,7 +229,3 @@ class HotKeyManager:
 
     def join(self):
         self.__listener.join()
-
-    @property
-    def hot_keys(self):
-        return self.__hot_keys
