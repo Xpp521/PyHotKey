@@ -14,29 +14,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+You need to move the script to the root directory before using it.
+"""
 from os import listdir
 from shutil import rmtree, move
 from subprocess import Popen, PIPE
 from sys import executable, exec_prefix
-from os.path import join, dirname, isdir, pardir
-
-
-# The current directory
-CUR_DIR = dirname(__file__)
-
-# The root directory
-ROOT = join(CUR_DIR, pardir)
-
-# The path of twine.exe
-TWINE = join(exec_prefix, 'Scripts', 'twine.exe')
-
-# Load main package name
-with open(join(ROOT, 'setup.py')) as f:
-    for line in f.readlines():
-        if line.startswith('MAIN_PACKAGE_NAME'):
-            line = line.strip().replace(' ', '').replace('"', '').replace("'", '')
-            MAIN_PACKAGE_NAME = line.split('=')[-1]
-            break
+from os.path import join, isdir, exists, dirname
 
 
 def exec_cmd(*args):
@@ -49,9 +34,37 @@ def exec_cmd(*args):
     res = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = res.communicate()
     if 0 != res.returncode:
-        raise RuntimeError('Failed to execute <{}> ({}): {}'.format(args, res.returncode, stderr))
+        raise RuntimeError('Failed to execute <{}> ({}): {}'.format(args, res.returncode, stderr.decode('gbk')))
     else:
-        return stdout.decode('utf8')
+        return stdout.decode('gbk')
+
+
+# The current directory
+CUR_DIR = dirname(__file__)
+
+# The root directory
+ROOT = CUR_DIR
+
+# The path of twine.exe.
+# If it does not exist, try installing it with pip or easy_install.
+TWINE = join(exec_prefix, 'Scripts', 'twine.exe')
+if not exists(TWINE):
+    pip = join(exec_prefix, 'Scripts', 'pip.exe')
+    easy_install = join(exec_prefix, 'Scripts', 'easy_install.exe')
+    if exists(pip):
+        exec_cmd(pip, 'install', 'twine')
+    elif exists(easy_install):
+        exec_cmd(easy_install, 'twine')
+    else:
+        raise ModuleNotFoundError('Please install "twine".')
+
+# Load the main package name
+with open(join(ROOT, 'setup.py')) as f:
+    for line in f.readlines():
+        if line.startswith('MAIN_PACKAGE_NAME'):
+            line = line.strip().replace(' ', '').replace('"', '').replace("'", '')
+            MAIN_PACKAGE_NAME = line.split('=')[-1]
+            break
 
 
 def clean():
@@ -92,11 +105,14 @@ def upload():
     print(exec_cmd(TWINE, 'upload', join(ROOT, 'dist', '*')))
 
 
-if __name__ == '__main__':
+def main():
     clean()
     pack()
     check()
-    c = input('Upload to PYPI (y/n)? ').strip()
-    if 'y' == c:
+    if 'y' == input('Upload to PYPI (y/n)? ').strip():
         upload()
     input('Script end...')
+
+
+if __name__ == '__main__':
+    main()
