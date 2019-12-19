@@ -1,6 +1,6 @@
 # PyHotKey
 ### Description
-PyHotKey is a cross-platform hot key module for Python. Based on "Pynput" module.
+PyHotKey is a cross-platform hot key module for Python. Based on "pynput" library.
 
 ### Installation
 ```
@@ -9,7 +9,6 @@ pip install PyHotKey
 
 ### Usage:
 ```python
-from os.path import join
 from PyHotKey import manager, Key
 
 # Register
@@ -21,15 +20,14 @@ key_id2 = manager.RegisterHotKey(func2, [Key.caps_lock], 2, 0.5,
 manager.UnregisterHotKey(key_id1)
 
 # Show the hot key list
-print(manager.hot_keys)
+print(manager.hotKeyList)
 
 # Turn on the logger
 manager.logger = True
 
 # custom the log path
-manager.setLogPath(join('log', 'HotKeyLog.txt'))
+manager.setLogPath('MyLog.txt')
 
 # Turn off the logger
 manager.logger = False
-...
 ```

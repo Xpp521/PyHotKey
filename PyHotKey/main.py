@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
-# @Time    : 2019/11/14 15:16
-# @Author  : Xpp
-# @Email   : Xpp233@foxmail.com
+# PyHotKey
+# Copyright (C) 2019 Xpp521
+#
+# This program is free software: you can redistribute it and/or modify it under
+# the terms of the GNU Lesser General Public License as published by the Free
+# Software Foundation, either version 3 of the License, or (at your option) any
+# later version.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License for more
+# details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
 from time import time
 from pynput.keyboard import Listener, Key, KeyCode
 from logging import getLogger, DEBUG, WARNING, StreamHandler, FileHandler, Formatter
-
-
-# class HotKeyType(IntEnum):
-#     """Deprecated class."""
-#     # single key
-#     SINGLE = 1
-#     # multiple keys
-#     MULTIPLE = 2
 
 
 class HotKey:
@@ -83,7 +87,7 @@ class HotKeyManager:
         self.__hot_keys = []
         self.__pressed_keys = []
         self.__released_keys = []
-        self.__logger = getLogger()
+        self.__logger = getLogger('{}.{}'.format(self.__class__.__module__, self.__class__.__name__))
         self.__file_handler = ''
         self.__formatter = Formatter('[%(asctime)s]%(message)s')
         stream_handler = StreamHandler()
@@ -100,14 +104,13 @@ class HotKeyManager:
     def logger(self, value):
         if value:
             self.__logger.setLevel(DEBUG)
-            self.setLogPath('PyHotKeyLog.log')
+            self.setLogPath('{}.log'.format(self.__class__.__module__.split('.')[0]))
         else:
             self.__logger.setLevel(WARNING)
 
     def setLogPath(self, path):
         """
-        Set the log path, only works when the user turns on the logger.
-        :param path: the path of log.
+        Set the log path.
         :rtype: bool.
         """
         if self.logger:
@@ -126,13 +129,12 @@ class HotKeyManager:
     def RegisterHotKey(self, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         """
         :param trigger: the function called when the hot key is triggered.
-        :param list keys: key list.
-        :param int count: the press times of hot key. Only for single type hot key.
-        :param float interval: the interval time between presses, unit: second. Only for single type hot key.
+        :param list keys: the key list.
+        :param int count: the number of repeated keystrokes.
+        :param float interval: the interval time between each keystroke, unit: second.
         :param args: the arguments of trigger.
         :param kwargs: the keyword arguments of trigger.
-        :return: if successful, return a key id, else return -1.
-        :rtype: int.
+        :return: returns a key id if successful; otherwise returns -1.
         """
         keys = set(keys)
         if any([key.keys == keys for key in self.__hot_keys]):
@@ -152,7 +154,7 @@ class HotKeyManager:
 
     def UnregisterHotKey(self, key_id):
         """
-        :param key_id: id of the hot key to be unregistered.
+        :param key_id: the id of the hot key to be unregistered.
         :rtype: bool.
         """
         if isinstance(key_id, int) and 0 < key_id < self.__id:
@@ -207,7 +209,7 @@ class HotKeyManager:
             self.__exec_trigger(hot_key)
 
     @property
-    def hot_keys(self):
+    def hotKeyList(self):
         return self.__hot_keys
 
     @property

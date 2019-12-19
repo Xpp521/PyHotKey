@@ -8,6 +8,6 @@
 *.egg-info/
 out
 gen
-
 build/*
 dist/*
+*.log

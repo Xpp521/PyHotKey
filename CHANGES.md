@@ -1,4 +1,10 @@
 # Release Note
+### v1.3.1
+- Delete a deprecated class.
+- Replace root logger with a separate logger.
+- Rename property "hot_keys" to "hotKeyList".
+- Change documents and some code comments.
+___
 ### v1.3.0
 - Currently, users can customize the log path.
 - Optimize code.
