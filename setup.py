@@ -11,13 +11,13 @@ MAIN_PACKAGE_NAME = 'PyHotKey'
 PACKAGE_URL = 'https://github.com/Xpp521/PyHotKey'
 
 # The runtime requirements
-RUNTIME_PACKAGES = ['pynput>=1.6.0']
+INSTALL_REQUIRES = ['pynput<=1.4.5']
 
 # Additional requirements used during setup
-SETUP_PACKAGES = []
+SETUP_REQUIRES = []
 
 # Packages requires for different environments
-EXTRA_PACKAGES = {}
+EXTRAS_REQUIRES = {}
 
 ROOT = dirname(__file__)
 
@@ -61,9 +61,9 @@ setup(
     keywords=['hotkey', 'hot', 'key'],
     packages=find_packages(),
     # package_dir={'': join(ROOT, MAIN_PACKAGE_NAME)},
-    install_requires=RUNTIME_PACKAGES,
-    setup_requires=SETUP_PACKAGES,
-    extras_require=EXTRA_PACKAGES,
+    install_requires=INSTALL_REQUIRES,
+    setup_requires=SETUP_REQUIRES,
+    extras_require=EXTRAS_REQUIRES,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Operating System :: OS Independent',

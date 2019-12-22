@@ -67,7 +67,7 @@ class HotKeyManager:
     def RegisterHotKey(self, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         """
         :param trigger: the function invoked when the hot key is triggered.
-        :param list keys: the key list.
+        :param list keys: the keystroke list.
         :param int count: the number of repeated keystrokes.
         :param float interval: the interval time between each keystroke, unit: second.
         :param args: the arguments of trigger.

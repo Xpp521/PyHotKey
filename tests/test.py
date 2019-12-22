@@ -4,7 +4,7 @@ from PyHotKey import manager, Key
 
 
 def func(li):
-    # print(23333333333333333333333)
+    print(23333333333333333333333)
     li.append(233)
     print(li)
 
@@ -13,10 +13,9 @@ def main():
     l = []
     x, y = 4, 3
     manager.logger = True
-    key_id1 = manager.RegisterHotKey(func, [1, Key.ctrl_l, Key.alt_l], 2, 0.5)
-    key_id2 = manager.RegisterHotKey(func, ['z', Key.ctrl_l, Key.alt_l], 2, 0.5)
+    key_id1 = manager.RegisterHotKey(lambda: print(233), ['z', Key.ctrl_l, Key.alt_l], 2, 0.5)
     print(manager.hotKeyList)
-    print(key_id2)
+    print(key_id1)
     n = 0
     while True:
         if 3 == n:

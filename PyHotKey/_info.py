@@ -16,4 +16,4 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 AUTHOR = 'Xpp'
 AUTHOR_EMAIL = 'Xpp233@foxmail.com'
-VERSION = '1.3.2'
+VERSION = '1.3.3'

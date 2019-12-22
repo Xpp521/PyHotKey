@@ -1,4 +1,10 @@
 # Release Note
+## v1.3.3
+#### Bug Fixes
+- Combination hot key: Fix the keystroke value error of combination hot key.
+#### Refactor
+- Simplify README.md.
+___
 ## v1.3.2
 #### Bug Fixes
 - Log path: fix the default log path overwrites the custom log path when setting "manager.logger = True".
