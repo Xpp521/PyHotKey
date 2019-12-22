@@ -11,7 +11,7 @@ MAIN_PACKAGE_NAME = 'PyHotKey'
 PACKAGE_URL = 'https://github.com/Xpp521/PyHotKey'
 
 # The runtime requirements
-RUNTIME_PACKAGES = ['pynput>=1.4.5']
+RUNTIME_PACKAGES = ['pynput>=1.6.0']
 
 # Additional requirements used during setup
 SETUP_PACKAGES = []
@@ -52,9 +52,11 @@ setup(
     author=INFO.get('AUTHOR'),
     author_email=INFO.get('AUTHOR_EMAIL'),
     url=PACKAGE_URL,
-    project_urls={'Documentation': 'https://github.com/Xpp521/PyHotKey/wiki',
-                  'Source': 'https://github.com/Xpp521/PyHotKey',
-                  'Tracker': 'https://github.com/Xpp521/PyHotKey/issues'},
+    project_urls={
+        'Documentation': 'https://github.com/Xpp521/PyHotKey/wiki',
+        'Source': 'https://github.com/Xpp521/PyHotKey',
+        'Tracker': 'https://github.com/Xpp521/PyHotKey/issues'
+    },
     license='LGPLv3',
     keywords=['hotkey', 'hot', 'key'],
     packages=find_packages(),

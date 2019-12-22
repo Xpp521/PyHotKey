@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# PyHotKey
+#
 # Copyright (C) 2019 Xpp521
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -17,9 +17,9 @@
 """
 PyHotKey
 ~~~~~~~~
-A cross-platform hot key module for Python. Based on "Pynput" module.
+A cross-platform hot key module for Python. Based on "pynput" library.
 
-Usage：
+Basic Usage：
     from PyHotKey import manager, Key
 
     # Register
@@ -37,12 +37,12 @@ Usage：
     manager.logger = True
 
     # custom the log path
-    manager.setLogPath('MyLog.txt')
+    manager.setLogPath('MyLog.log')
 
     # Turn off the logger
     manager.logger = False
 """
-from .main import Key, HotKeyManager as __HotKeyManager
-
+from .hot_key import Key
+from .manager import HotKeyManager as __HotKeyManager
 manager = __HotKeyManager()
 manager.start()

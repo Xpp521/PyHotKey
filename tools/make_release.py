@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# PyHotKey
+#
 # Copyright (C) 2019 Xpp521
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -45,9 +45,9 @@ CUR_DIR = dirname(__file__)
 # The root directory
 ROOT = CUR_DIR
 
-# The path of twine.exe.
-# If it does not exist, try installing it with pip or easy_install.
+# The path of twine.exe
 TWINE = join(exec_prefix, 'Scripts', 'twine.exe')
+# If it does not exist, try installing it with pip or easy_install
 if not exists(TWINE):
     pip = join(exec_prefix, 'Scripts', 'pip.exe')
     easy_install = join(exec_prefix, 'Scripts', 'easy_install.exe')
@@ -56,7 +56,7 @@ if not exists(TWINE):
     elif exists(easy_install):
         exec_cmd(easy_install, 'twine')
     else:
-        raise ModuleNotFoundError('Please install "twine".')
+        raise ModuleNotFoundError("No module named 'twine'")
 
 # Load the main package name
 with open(join(ROOT, 'setup.py')) as f:

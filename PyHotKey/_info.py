@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# PyHotKey
+#
 # Copyright (C) 2019 Xpp521
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -16,4 +16,4 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 AUTHOR = 'Xpp'
 AUTHOR_EMAIL = 'Xpp233@foxmail.com'
-VERSION = '1.3.1'
+VERSION = '1.3.2'
