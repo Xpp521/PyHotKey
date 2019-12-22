@@ -109,7 +109,7 @@ def main():
     clean()
     pack()
     check()
-    if 'y' == input('Upload to PYPI (y/n)? ').strip():
+    if 'y' == input('Upload to PYPI (y/n)? '):
         upload()
     input('Script end...')
 

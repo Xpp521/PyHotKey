@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# PyHotKey
+#
 # Copyright (C) 2019 Xpp521
 #
 # This program is free software: you can redistribute it and/or modify it under
@@ -15,70 +15,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from time import time
-from pynput.keyboard import Listener, Key, KeyCode
+from .hot_key import HotKey
+from pynput.keyboard import Listener
 from logging import getLogger, DEBUG, WARNING, StreamHandler, FileHandler, Formatter
-
-
-class HotKey:
-    def __init__(self, _id, trigger, keys, count=2, interval=0.5, *args, **kwargs):
-        if callable(trigger):
-            self.__trigger = trigger
-        else:
-            raise TypeError('Wrong type, "trigger" must be a function.')
-        try:
-            keys = set(keys)
-            self.__keys = [key if isinstance(key, Key) else KeyCode(char=key[0]) for key in keys]
-        except Exception:
-            raise TypeError('Wrong type, "keys" must be a list, tuple or set, '
-                            'and the type of its element must be "PyHotKey.Key" or char.')
-        if not self.__keys:
-            raise ValueError('Wrong value, "keys" must be a Non empty list.')
-        if 1 == len(self.__keys):
-            if isinstance(count, int) and 0 < count:
-                self.__count = count
-            else:
-                raise ValueError('Invalid value, "count" must be a positive integer.')
-            if isinstance(interval, float) and 0 < interval < 1:
-                self.__interval = interval
-            else:
-                raise ValueError('Invalid value, "interval" must be between 0 and 1.')
-        else:
-            self.__count = 2
-            self.__interval = 0.5
-        self.__id = _id
-        self.__args = args
-        self.__kwargs = kwargs
-
-    def __eq__(self, o):
-        if isinstance(o, self.__class__):
-            return self.__id == o.id
-        return False
-
-    def __repr__(self):
-        t = []
-        for key in self.__keys:
-            name = repr(key)
-            t.append(name[name.find('.') + 1: name.find(':')] if '<' == name[0] else name.replace("'", ''))
-        return '<HotKey id:{} keys:[{}]>'.format(self.__id, ', '.join(t))
-
-    def trigger(self):
-        return self.__trigger(*self.__args, **self.__kwargs)
-
-    @property
-    def id(self):
-        return self.__id
-
-    @property
-    def keys(self):
-        return self.__keys
-
-    @property
-    def count(self):
-        return self.__count
-
-    @property
-    def interval(self):
-        return self.__interval
 
 
 class HotKeyManager:
@@ -88,7 +27,7 @@ class HotKeyManager:
         self.__pressed_keys = []
         self.__released_keys = []
         self.__logger = getLogger('{}.{}'.format(self.__class__.__module__, self.__class__.__name__))
-        self.__file_handler = ''
+        self.__cur_file_handler = ''
         self.__formatter = Formatter('[%(asctime)s]%(message)s')
         stream_handler = StreamHandler()
         stream_handler.setFormatter(self.__formatter)
@@ -104,7 +43,8 @@ class HotKeyManager:
     def logger(self, value):
         if value:
             self.__logger.setLevel(DEBUG)
-            self.setLogPath('{}.log'.format(self.__class__.__module__.split('.')[0]))
+            if 1 == len(self.__logger.handlers):
+                self.setLogPath('{}.log'.format(self.__class__.__module__.split('.')[0]))
         else:
             self.__logger.setLevel(WARNING)
 
@@ -113,22 +53,20 @@ class HotKeyManager:
         Set the log path.
         :rtype: bool.
         """
-        if self.logger:
-            try:
-                file_handler = FileHandler(path, encoding='utf8')
-            except FileNotFoundError:
-                return False
-            file_handler.setFormatter(self.__formatter)
-            if 1 < len(self.__logger.handlers):
-                self.__logger.removeHandler(self.__file_handler)
-            self.__logger.addHandler(file_handler)
-            self.__file_handler = file_handler
-            return True
-        return False
+        try:
+            file_handler = FileHandler(path, encoding='utf8')
+        except FileNotFoundError:
+            return False
+        file_handler.setFormatter(self.__formatter)
+        if 1 < len(self.__logger.handlers):
+            self.__logger.removeHandler(self.__cur_file_handler)
+        self.__logger.addHandler(file_handler)
+        self.__cur_file_handler = file_handler
+        return True
 
     def RegisterHotKey(self, trigger, keys, count=2, interval=0.5, *args, **kwargs):
         """
-        :param trigger: the function called when the hot key is triggered.
+        :param trigger: the function invoked when the hot key is triggered.
         :param list keys: the key list.
         :param int count: the number of repeated keystrokes.
         :param float interval: the interval time between each keystroke, unit: second.
