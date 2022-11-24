@@ -1,0 +1,48 @@
+﻿.MainWindow {background-color: #f0f0f0;}
+.MainWindow QLabel {font: 900 16px; background-color: #f0f0f0;}
+.MainWindow QLineEdit {border: 2px solid; border-color: #4daf7c; border-radius: 5px;}
+.MainWindow QLineEdit:focus {border-color: #4daf7c;}
+.MainWindow QTextEdit {background-color: white; border: 2px solid; border-color: #4daf7c; border-radius: 7px; padding: 5;}
+.MainWindow QPushButton {
+font: 900 14px;
+color: #4daf7c;
+outline: none;
+background-color: #264daf7c;
+border-radius: 5px;
+}
+.MainWindow QPushButton:hover {background-color: #3F4daf7c;}
+.MainWindow QPushButton:pressed {background-color: #594daf7c;}
+.MainWindow QPushButton:!enabled {color: #4daf7c;}
+.MainWindow QPushButton#btn_cancel {
+color: #ea6e4d;
+background-color: #26ea6e4d;
+}
+.MainWindow QPushButton#btn_cancel:hover {background-color: #3Fea6e4d;}
+.MainWindow QPushButton#btn_cancel:pressed {background-color: #59ea6e4d;}
+.MainWindow QComboBox {border: 2px solid #4daf7c; border-radius: 5px;}
+.MainWindow QComboBox::drop-down {
+background-color: #4daf7c;
+}
+.MainWindow QComboBox QAbstractItemView {
+border: 1px solid #4daf7c;
+selection-background-color: #594daf7c;
+}
+.MainWindow QComboBox::down-arrow {
+border-image: url(down-arrow.png);
+}
+.MainWindow QComboBox:!enabled {border: 1px solid #4daf7c; background-color: #e1e1e1;}
+.MainWindow QCheckBox, .MainWindow QRadioButton {font: 14px;}
+.MainWindow QCheckBox::indicator, .MainWindow QRadioButton::indicator {
+width: 12px;
+height: 12px;
+border: 2px solid #4daf7c;
+border-radius: 3px;
+}
+.MainWindow QCheckBox::indicator:pressed, .MainWindow QRadioButton::indicator:pressed {
+background-color: #4daf7c;
+}
+.MainWindow QCheckBox::indicator:checked, .MainWindow QRadioButton::indicator:checked {
+background-color: #4daf7c;
+image: url(check.png);
+image-position: center;
+}

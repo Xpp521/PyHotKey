@@ -14,7 +14,8 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-NAME = 'PyHotKey'
-AUTHOR = 'Xpp'
-AUTHOR_EMAIL = 'xpp233@foxmail.com'
-VERSION = '1.4.0'
+from pynput.keyboard._uinput import Key, KeyCode, Controller, Listener
+
+
+def pre_process(key):
+    return key

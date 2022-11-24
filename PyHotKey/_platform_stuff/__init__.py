@@ -14,7 +14,19 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-NAME = 'PyHotKey'
-AUTHOR = 'Xpp'
-AUTHOR_EMAIL = 'xpp233@foxmail.com'
-VERSION = '1.4.0'
+"""
+Platform stuff.
+"""
+from sys import platform
+
+if 'win32' == platform:
+    from .win32 import Key, KeyCode, Controller, Listener, pre_process_key
+elif 'darwin' == platform:
+    from .darwin import Key, KeyCode, Controller, Listener, pre_process_key
+else:
+    try:
+        from .xorg import Key, KeyCode, Controller, Listener, pre_process_key
+    except ImportError:
+        raise
+if not all([Key, KeyCode, Controller, Listener, pre_process_key]):
+    raise ImportError('Unsupported platform')

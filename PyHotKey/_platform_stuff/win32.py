@@ -14,7 +14,17 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-NAME = 'PyHotKey'
-AUTHOR = 'Xpp'
-AUTHOR_EMAIL = 'xpp233@foxmail.com'
-VERSION = '1.4.0'
+from pynput._util.win32 import KeyTranslator
+from pynput.keyboard._win32 import Key, KeyCode, Controller, Listener
+
+translator = KeyTranslator()
+
+
+def pre_process_key(key):
+    if isinstance(key, KeyCode):
+        if key.char and not key.vk:
+            return KeyCode(char=key.char.lower())
+        new_key = KeyCode(char=translator.char_from_scan(translator(key.vk, True).get('_scan')))
+        if new_key.char or new_key.vk:
+            return new_key
+    return key

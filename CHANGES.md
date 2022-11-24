@@ -1,4 +1,15 @@
 # Release Note
+## v1.4.0 - 2022 Reborn
+After 3 years I'm back with the new "PyHotKey".
+
+Changes:
+- Fixed a lot of bugs.
+- Now you can record hotkey and control keyboard.
+- Real cross platform this time.
+- And more convenient apis...
+
+Check "README.md".
+___
 ## v1.3.3
 #### Bug Fixes
 - Combination hot key: Fix the keystroke value error of combination hot key.

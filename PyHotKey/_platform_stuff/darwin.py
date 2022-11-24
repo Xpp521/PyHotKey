@@ -14,7 +14,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-NAME = 'PyHotKey'
-AUTHOR = 'Xpp'
-AUTHOR_EMAIL = 'xpp233@foxmail.com'
-VERSION = '1.4.0'
+from pynput._util.darwin import keycode_context, keycode_to_string
+from pynput.keyboard._darwin import Key, KeyCode, Controller, Listener
+
+with keycode_context() as context:
+    _context = context
+
+
+def pre_process_key(key):
+    if isinstance(key, KeyCode):
+        return KeyCode(char=keycode_to_string(_context, key.vk))
+    return key

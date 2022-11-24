@@ -1,6 +1,7 @@
 from time import sleep
 from os.path import join
-from PyHotKey import manager, Key
+from PyHotKey import Key, keyboard_manager as manager
+# from pynput.keyboard import Key, Controller
 
 
 def func(li):
@@ -9,25 +10,36 @@ def func(li):
     print(li)
 
 
-def main():
+def hotkey():
     l = []
     x, y = 4, 3
     manager.logger = True
-    key_id1 = manager.RegisterHotKey(lambda: print(233), ['z', Key.ctrl_l, Key.alt_l], 2, 0.5)
-    print(manager.hotKeyList)
-    print(key_id1)
+    manager.ttl = 2
+    key_id1 = manager.register_hotkey(lambda: print(233), ['Z', Key.shift_l])
+    key_id2 = manager.register_hotkey(lambda x: print('【X】{}'.format(x)), [Key.ctrl_l], 3, 777)
+    print(manager.hotkeys)
+    # manager.start_recording_hotkey_single(lambda k: print(k))
     n = 0
     while True:
-        if 3 == n:
+        if 1 == n:
             x = 230
+            with manager.pressed(Key.shift) as r:
+                print(r)
+                manager.press('Z')
+            print('————————————————————————End——————————————————————')
+            # break
+            # manager.press('z')
+            # manager.press(Key.ctrl_l)
+            # manager.press(Key.alt_l)
             # manager.RegisterHotKey(func, [Key.caps_lock])
             # manager.setLogPath(join('log', 'log.txt'))
             # manager.logger = False
             # manager.UnregisterHotKey(key_id)
-        print('loop: {}'.format(n))
+        # print('loop: {}, running: {}'.format(n, manager.running))
         n += 1
         sleep(3)
 
 
 if __name__ == '__main__':
-    main()
+    hotkey()
+    # input()

@@ -14,7 +14,13 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-NAME = 'PyHotKey'
-AUTHOR = 'Xpp'
-AUTHOR_EMAIL = 'xpp233@foxmail.com'
-VERSION = '1.4.0'
+from pynput.keyboard._xorg import Key, KeyCode, Controller, Listener as _Listener
+
+
+class Listener(_Listener):
+    def _keycode_to_keysym(self, display, keycode, index):
+        return super()._keycode_to_keysym(display, keycode, 0)
+
+
+def pre_process_key(key):
+    return key
