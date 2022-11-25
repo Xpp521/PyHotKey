@@ -171,7 +171,7 @@ class MainWindow(QWidget):
         if QDialog.Accepted == r:
             i = manager.register_hotkey(lambda s: self.signal.emit('Hotkey triggered', s),
                                         self.dialog_recording.keys, self.dialog_recording.count,
-                                        '+'.join([repr(k).strip("'") for k in self.dialog_recording.keys]))
+                                        '+'.join([repr(k) for k in self.dialog_recording.keys]))
             if -1 == i:
                 self.dialog_alert.open_('Register failed', 'Already registered !')
             elif 0 == i:
@@ -183,7 +183,7 @@ class MainWindow(QWidget):
 def main():
     app = QApplication(argv)
     manager.logger = True
-    manager.set_log_file('Loggerrrrrrr.txt')
+    # manager.set_log_file('Loggerrrrrrr.txt')
     window = MainWindow()
     window.show()
     exit(app.exec())

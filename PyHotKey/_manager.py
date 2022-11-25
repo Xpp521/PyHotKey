@@ -177,6 +177,12 @@ class KeyboardManager:
         self.__logger.info("【Unregister 0】the hotkey: {} doesn't exists".format(keys))
         return False
 
+    def unregister_all_hotkeys(self):
+        """Unregister all hotkeys."""
+        self.__hotkeys.clear()
+        self.__logger.info("【Unregister 1】all hotkeys")
+        return True
+
     def __exec_trigger(self, hot_key):
         try:
             hot_key.trigger()
@@ -382,7 +388,7 @@ class KeyboardManager:
         self.__pressed_keys.clear()
         self.__released_keys.clear()
         self.__listener.stop()
-        self.__logger.info('【Keyboard listener ended】——————————————————>')
+        self.__logger.info('【Keyboard listener ended】<——————————————————')
 
 
 keyboard_manager = KeyboardManager()
