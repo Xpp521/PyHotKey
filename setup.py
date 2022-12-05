@@ -58,7 +58,7 @@ setup(
         'Tracker': 'https://github.com/Xpp521/PyHotKey/issues'
     },
     license='LGPLv3',
-    keywords=['hotkey', 'keyboard', 'hot key'],
+    keywords=['hotkey', 'keyboard', 'hot+key'],
     packages=find_packages(),
     # package_dir={'': join(ROOT, MAIN_PACKAGE_NAME)},
     install_requires=INSTALL_REQUIRES,

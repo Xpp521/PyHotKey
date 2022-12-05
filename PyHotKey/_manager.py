@@ -16,7 +16,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from contextlib import contextmanager
 from ._key import Controller, Listener, WarmKey, HotKey, cold_keys
-from logging import getLogger, DEBUG, WARNING, StreamHandler, FileHandler, Formatter
+from logging import getLogger, CRITICAL, DEBUG, StreamHandler, FileHandler, Formatter
 
 
 class KeyboardManager:
@@ -42,13 +42,16 @@ class KeyboardManager:
         self.__listener = None
         self.start()
 
+    # def set_log_level(self, level):
+    #     self.__logger.setLevel(level)
+
     @property
     def logger(self):
-        return DEBUG > self.__logger.level
+        return DEBUG >= self.__logger.level
 
     @logger.setter
     def logger(self, v):
-        self.__logger.setLevel(DEBUG if v else WARNING)
+        self.__logger.setLevel(DEBUG if v else CRITICAL)
 
     def set_log_file(self, path, mode='w'):
         """
@@ -116,17 +119,17 @@ class KeyboardManager:
             return
         self.__controller.type(string)
 
-    def register_hotkey(self, trigger, keys, count=2, *args, **kwargs):
+    def register_hotkey(self, keys, count, trigger, *args, **kwargs):
         """
-        :param trigger: the function invoked when the hotkey is triggered.
         :param keys: the key list or tuple.
         :param count: number of pressed times for hotkey with single key.
+        :param trigger: the function invoked when the hotkey is triggered.
         :param args: the arguments of trigger function.
         :param kwargs: the keyword arguments of trigger function.
         :return: positive integer = hotkey id; 0 = Invalid parameters; -1 = the hotkey has been registered.
         """
         if not callable(trigger):
-            self.__logger.info('【Register 0】"trigger" function is not callable')
+            self.__logger.info('【Register 0】"trigger" is not callable')
             return 0
         if 1 == len(keys) and (not isinstance(count, int) or 0 >= count):
             self.__logger.info('【Register 0】"count" is not a positive integer')
@@ -137,7 +140,7 @@ class KeyboardManager:
             self.__logger.info('【Register 0】Invalid key list: {}'.format(keys))
             return 0
         if any([length == len(hotkey.keys) and all([k in hotkey.keys for k in keys]) for hotkey in self.__hotkeys]):
-            self.__logger.info('【Register -1】The hotkey: {} has been registered.'.format(keys))
+            self.__logger.info('【Register -1】Hotkey: {} has been registered.'.format(keys))
             return -1
         hot_key = HotKey(self.__id, trigger, keys, count, *args, **kwargs)
         self.__hotkeys.append(hot_key)
@@ -183,24 +186,14 @@ class KeyboardManager:
         self.__logger.info("【Unregister 1】all hotkeys")
         return True
 
-    def __exec_trigger(self, hot_key):
+    def __exec_trigger(self, hotkey):
         try:
-            hot_key.trigger()
+            self.__logger.info('【HotKey triggered】{}'.format(hotkey))
+            hotkey.trigger()
         except Exception as e:
             e_type = str(type(e))
-            self.__logger.error('''【Exception】in {}'s trigger function:
-{}: {}'''.format(hot_key, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
-        # self.__pressed_keys.clear()
-        # self.__released_keys.clear()
-
-    def __filter_darwin(self, event_type, event):
-        return event
-
-    def __filter_win32(self, msg, data):
-        pass
-        # if self.__block:
-        #     self.__listener.suppress_event()
-        # return True
+            self.__logger.error('''【HotKey exception】 {}:
+{}: {}'''.format(hotkey, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
 
     def __start_recording_hotkey(self, callback, type_):
         if self.__recording_state:
@@ -363,10 +356,6 @@ class KeyboardManager:
         else:
             self.__interval = 0.3
 
-    # @property
-    # def suppress(self):
-    #     return self.__listener.suppress
-
     @property
     def running(self):
         return self.__listener.running if self.__listener else False
@@ -374,21 +363,21 @@ class KeyboardManager:
     def start(self):
         if self.running:
             return
-        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release,
-                                   win32_event_filter=self.__filter_win32,
-                                   darwin_intercept=self.__filter_darwin)
+        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release,)
+                                   # win32_event_filter=self.__filter_win32,
+                                   # darwin_intercept=self.__filter_darwin)
         self.__listener.start()
-        self.__logger.info('【Keyboard listener started】——————————————————>')
+        self.__logger.debug('【Keyboard listener started】——————————————————>')
 
-    # def wait(self):
-    #     self.__listener.wait()
+    def wait(self):
+        self.__listener.wait()
 
     def stop(self):
         self.__recording_state = 0
         self.__pressed_keys.clear()
         self.__released_keys.clear()
         self.__listener.stop()
-        self.__logger.info('【Keyboard listener ended】<——————————————————')
+        self.__logger.debug('【Keyboard listener ended】<——————————————————')
 
 
 keyboard_manager = KeyboardManager()

@@ -28,12 +28,19 @@ class ColdKey(KeyCode):
         else:
             super().__init__(vk, char.lower() if char else None, False, **kwargs)
 
+    def __compare_cold_key(self, other):
+        if self.char and other.char:
+            return self.char == other.char
+        else:
+            return self.vk == other.vk
+
     def __eq__(self, other):
         if isinstance(other, ColdKey):
-            if self.char and other.char:
-                return self.char == other.char
-            else:
-                return self.vk == other.vk
+            return self.__compare_cold_key(other)
+        elif isinstance(other, (Key, ColdKey)):
+            return self.__compare_cold_key(ColdKey(other))
+        elif isinstance(other, str) and 1 == len(other):
+            return self.__compare_cold_key(ColdKey(char=other))
         return False
 
     def __repr__(self):
@@ -80,10 +87,10 @@ class WarmKey(ColdKey):
 
 
 class HotKey:
-    def __init__(self, _id, trigger, keys, count=2, *args, **kwargs):
+    def __init__(self, _id, trigger, keys, count, *args, **kwargs):
         self.__trigger = trigger
         self.__keys = keys
-        self.__count = count
+        self.__count = count if 1 == len(keys) else None
         self.__id = _id
         self.__args = args
         self.__kwargs = kwargs

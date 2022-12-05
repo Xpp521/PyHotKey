@@ -1,4 +1,9 @@
 # Release Note
+## v1.4.1
+- Add api: "unregister_all_hotkeys".
+- Change the parameter order of "register_hotkey".
+- Now you can use "pressed_keys" to check whether a key is pressed.
+___
 ## v1.4.0 - 2022 Reborn
 After 3 years I'm back with the new "PyHotKey".
 

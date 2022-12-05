@@ -17,4 +17,4 @@
 NAME = 'PyHotKey'
 AUTHOR = 'Xpp'
 AUTHOR_EMAIL = 'xpp233@foxmail.com'
-VERSION = '1.4.0'
+VERSION = '1.4.1'

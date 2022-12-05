@@ -2,7 +2,10 @@
 PyHotKey is a **cross-platform** hotkey module for Python. Based on "pynput".
 
 ## Usage
-***Note***: For the best experience of this module, run your program as administrator in Windows. For Mac OS and Linux, run your program as root or use "sudo" command.
+***Note***: To get the best experience of this module, you must run your application with the highest privileges.
+- Windows: run your application as administrator.
+- Linux: run your application as root or use "sudo" command to launch your application.
+- Mac OS: same as Linux or whitelist your application: open "System Preferences -> Security & Privacy -> Privacy -> Accessibility (on the left)", click the lock to make changes (at the bottom), check your application on the right.
 
 #### Install
 ```
@@ -17,7 +20,8 @@ from PyHotKey import Key, keyboard_manager as manager
 #### Register hotkey:
 ```python
 # Register a hotkey (multiple keys)
-id1 = manager.register_hotkey(func, [Key.ctrl_l, Key.alt_l, 'z'])
+id1 = manager.register_hotkey([Key.ctrl_l, Key.alt_l, 'z'], None,
+                              func, func_arg1, func_arg2=1)
 
 if -1 == id1:
     print('Already registered!')
@@ -28,7 +32,7 @@ else:
 
 # Register a hotkey (single key)
 # 2 means tap twice to trigger the hotkey
-id2 = manager.register_hotkey(func, [Key.caps_lock], 2,
+id2 = manager.register_hotkey([Key.caps_lock], 2, func,
                               func_arg1, func_arg2, func_arg3=3)
 
 # Unregister hotkey by key list
@@ -37,7 +41,7 @@ r1 = manager.unregister_hotkey_by_keys([Key.ctrl_l, Key.alt_l, 'z'])
 # Unregister hotkey by hotkey id
 r2 = manager.unregister_hotkey_by_id(id2)
 
-# Unregister all hotkeys (will be added in the future)
+# Unregister all hotkeys
 r3 = manager.unregister_all_hotkeys()
 ```
 
@@ -85,8 +89,12 @@ manager.type('Xpp521')
 # Print all hotkeys
 print(manager.hotkeys)
 
-# Print currently pressed keys
+# Print the currently pressed keys
 print(manager.pressed_keys)
+
+# Check whether a key is pressed
+if 'z' in manager.pressed_keys:
+    print("'z' is pressed.")
 
 # Print recording state
 print(manager.recording)
@@ -97,7 +105,8 @@ manager.strict_mode = False
 
 # TTL: time to live (for hotkeys with multiple keys)
 # When a key is pressed for more than TTL seconds,
-# it will be removed from the currently pressed key list
+# it will be removed from the currently pressed keys
+# in the next key press/release event.
 manager.ttl = 7
 
 # Interval: the max interval time between each press (for hotkeys with single key)
@@ -127,3 +136,8 @@ manager.logger = True
 # Set a file for logging ("append" mode)
 manager.set_log_file('Loggggggg.log', 'a')
 ```
+
+##TODO:
+- [ ] Detect conflicts with system hotkeys.
+- [ ] Suppress the last key after triggering a hotkey.
+- [ ] Support to trigger hotkeys on pressed or on released.

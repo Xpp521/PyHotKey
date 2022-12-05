@@ -5,12 +5,21 @@
 # @Email   : Xpp233@foxmail.com
 """
 This is a small demo for recording hotkey.
+
+Require PySide6 or PySide2.
 """
-from sys import argv, exit
-from PySide6.QtCore import Qt, Signal
-from PyHotKey import keyboard_manager as manager
-from PySide6.QtWidgets import QApplication, QDialog, QWidget, QLabel, QComboBox, QPushButton, QRadioButton, QLineEdit, \
-    QTextEdit
+from os.path import pardir
+from sys import argv, exit, path
+path.append(pardir)
+from PyHotKey import keyboard_manager
+try:
+    from PySide6.QtCore import Qt, Signal
+    from PySide6.QtWidgets import QApplication, QDialog, QWidget, QLabel, QComboBox, QPushButton, QRadioButton, \
+        QLineEdit, QTextEdit
+except ModuleNotFoundError:
+    from PySide2.QtCore import Qt, Signal
+    from PySide2.QtWidgets import QApplication, QDialog, QWidget, QLabel, QComboBox, QPushButton, QRadioButton, \
+        QLineEdit, QTextEdit
 
 
 class PushButton(QPushButton):
@@ -51,7 +60,6 @@ class RecordingHotKeyDialog(Dialog):
         super().__init__(parent)
         self.setWindowTitle('Recording HotKey')
         self.setFixedSize(300, 400)
-        # self.setWindowFlags(Qt.FramelessWindowHint | Qt.Dialog)
         self.label_type = QLabel(parent=self, text='HotKey type')
         self.label_type.setGeometry(25, 25, 200, 25)
         self.radio_btn_single_key = RadioButton('Single key', self)
@@ -94,23 +102,23 @@ class RecordingHotKeyDialog(Dialog):
 
     def __radio_btn_single_key_toggled(self, state):
         if state:
-            manager.start_recording_hotkey_single(self.__set_keys)
+            keyboard_manager.start_recording_hotkey_single(self.__set_keys)
             self.combo_repetitions.setEnabled(True)
         else:
-            manager.stop_recording()
+            keyboard_manager.stop_recording()
             self.__set_keys()
 
     def __radio_btn_multiple_key_toggled(self, state):
         if state:
-            manager.start_recording_hotkey_multiple(self.__set_keys)
+            keyboard_manager.start_recording_hotkey_multiple(self.__set_keys)
             self.combo_repetitions.setEnabled(False)
         else:
-            manager.stop_recording()
+            keyboard_manager.stop_recording()
             self.__set_keys()
 
     def __set_keys(self, list_=None):
         if list_ and isinstance(list_, list):
-            self.line_keys.setText('+'.join([repr(k).strip("'") for k in list_]))
+            self.line_keys.setText('+'.join([repr(k) for k in list_]))
             self.keys = list_
         else:
             self.line_keys.clear()
@@ -131,11 +139,11 @@ class RecordingHotKeyDialog(Dialog):
         super().open()
 
     def accept(self):
-        manager.stop_recording()
+        keyboard_manager.stop_recording()
         super().accept()
 
     def reject(self):
-        manager.stop_recording()
+        keyboard_manager.stop_recording()
         super().reject()
 
     @property
@@ -169,26 +177,25 @@ class MainWindow(QWidget):
 
     def __recording_dialog_finished(self, r):
         if QDialog.Accepted == r:
-            i = manager.register_hotkey(lambda s: self.signal.emit('Hotkey triggered', s),
-                                        self.dialog_recording.keys, self.dialog_recording.count,
-                                        '+'.join([repr(k) for k in self.dialog_recording.keys]))
+            i = keyboard_manager.register_hotkey(self.dialog_recording.keys, self.dialog_recording.count,
+                                                 lambda s: self.signal.emit('Hotkey triggered', s),
+                                                 '+'.join([repr(k) for k in self.dialog_recording.keys]))
             if -1 == i:
                 self.dialog_alert.open_('Register failed', 'Already registered !')
             elif 0 == i:
                 self.dialog_alert.open_('Register failed', 'Invalid parameters !')
             else:
-                self.text.setText('\n'.join([repr(hotkey) for hotkey in manager.hotkeys]))
+                self.text.setText('\n'.join([repr(hotkey) for hotkey in keyboard_manager.hotkeys]))
 
 
 def main():
     app = QApplication(argv)
-    manager.logger = True
+    keyboard_manager.logger = True
     # manager.set_log_file('Loggerrrrrrr.txt')
     window = MainWindow()
     window.show()
-    exit(app.exec())
+    exit(app.exec() if getattr(app, 'exec', 0) else app.exec_())
 
 
 if __name__ == '__main__':
     main()
-    # input()
