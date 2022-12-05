@@ -61,7 +61,7 @@ manager.start_recording_hotkey_single(callback)
 # Stop recording hotkey
 manager.stop_recording()
 ```
-***PS***: More usage check examples on [GitHub](https://github.com/Xpp521/PyHotKey/tree/master/examples).
+***PS***: Check the example on [GitHub](https://github.com/Xpp521/PyHotKey/tree/master/examples) for details.
 
 #### Control keyboard
 ```python
@@ -100,7 +100,7 @@ if 'z' in manager.pressed_keys:
 print(manager.recording)
 
 # Strict mode (for hotkeys with multiple keys)
-# The pressed keys must be strictly equal to the hotkey
+# The pressed keys must be strictly equal to a hotkey's key list
 manager.strict_mode = False
 
 # TTL: time to live (for hotkeys with multiple keys)
@@ -137,7 +137,7 @@ manager.logger = True
 manager.set_log_file('Loggggggg.log', 'a')
 ```
 
-##TODO:
+## TODO:
 - [ ] Detect conflicts with system hotkeys.
 - [ ] Suppress the last key after triggering a hotkey.
-- [ ] Support to trigger hotkeys on pressed or on released.
+- [ ] Support to trigger hotkeys on presse or on release.
