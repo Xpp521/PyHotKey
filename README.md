@@ -7,17 +7,17 @@ PyHotKey is a **cross-platform** hotkey module for Python. Based on "pynput".
 - Linux: run your application as root or use "sudo" command to launch your application.
 - Mac OS: same as Linux or whitelist your application: open "System Preferences -> Security & Privacy -> Privacy -> Accessibility (on the left)", click the lock to make changes (at the bottom), check your application on the right.
 
-#### Install
+### Install
 ```
 pip install PyHotKey
 ```
 
-#### Import:
+### Import:
 ```python
 from PyHotKey import Key, keyboard_manager as manager
 ```
 
-#### Register hotkey:
+### Register hotkey:
 ```python
 # Register a hotkey (multiple keys)
 id1 = manager.register_hotkey([Key.ctrl_l, Key.alt_l, 'z'], None,
@@ -45,7 +45,7 @@ r2 = manager.unregister_hotkey_by_id(id2)
 r3 = manager.unregister_all_hotkeys()
 ```
 
-#### Record hotkey:
+### Record hotkey:
 ```python
 # The callback function for recording hotkey
 # You can use "key_list" to register hotkey later
@@ -61,9 +61,28 @@ manager.start_recording_hotkey_single(callback)
 # Stop recording hotkey
 manager.stop_recording()
 ```
-***PS***: More usage check examples on [GitHub](https://github.com/Xpp521/PyHotKey/tree/master/examples).
+***PS***: Check the example on [GitHub](https://github.com/Xpp521/PyHotKey/tree/master/examples) for details.
 
-#### Control keyboard
+### Wetkey
+Do something when a single key is pressed or released, I call it "Wetkey".
+```python
+def func(key, pressed):
+    print('{} is {}'.format(key, 'pressed' if pressed else 'released'))
+
+# Set a wetkey to trigger when "ctrl" is pressed
+r1 = manager.set_wetkey_on_press(Key.ctrl_l, func, 'control', 1)
+
+# Set a wetkey to trigger when "x" is released
+r2 = manager.set_wetkey_on_release('x', func, 'x', 0)
+
+# Remove the wetkey triggered when x is pressed
+r3 = manager.remove_wetkey_on_press('x')
+
+# Remove all wetkeys
+r4 = manager.remove_all_wetkeys()
+```
+
+### Control keyboard
 ```python
 # Press
 manager.press(Key.space)
@@ -84,42 +103,47 @@ manager.type('Xpp521')
 ```
 ***PS***: If you're recording hotkey, these apis won't work.
 
-#### Other APIs
+### Other APIs
 ```python
 # Print all hotkeys
 print(manager.hotkeys)
+
+# Print all wetkeys
+print(manager.wetkeys)
 
 # Print the currently pressed keys
 print(manager.pressed_keys)
 
 # Check whether a key is pressed
 if 'z' in manager.pressed_keys:
-    print("'z' is pressed.")
+    print("'z' is pressed")
 
 # Print recording state
 print(manager.recording)
 
 # Strict mode (for hotkeys with multiple keys)
-# The pressed keys must be strictly equal to the hotkey
+# The pressed keys must be strictly equal to
+# the hotkey's key list
 manager.strict_mode = False
 
-# TTL: time to live (for hotkeys with multiple keys)
-# When a key is pressed for more than TTL seconds,
+# ttl: time to live (for hotkeys with multiple keys)
+# When a key is pressed for more than ttl seconds,
 # it will be removed from the currently pressed keys
 # in the next key press/release event.
 manager.ttl = 7
 
-# Interval: the max interval time between each press (for hotkeys with single key)
+# Interval: the max interval time between each tap
+# (for hotkeys with single key)
 manager.interval = 0.5
 ```
 
-#### Keyboard Listener
+### Keyboard Listener
 ```python
 # Print keyboard listener's running state
 print(manager.running)
 
 # Stop keyboard listener
-# When stopped, hotkey related functions won't work
+# When stopped, hotkey and wetkey related functions won't work
 manager.stop()
 
 # Start keyboard listener
@@ -128,7 +152,7 @@ manager.start()
 ```
 ***PS***: Generally, you may not use these apis.
 
-#### Logger:
+### Logger:
 ```python
 # Turn on the logger
 manager.logger = True
@@ -137,7 +161,7 @@ manager.logger = True
 manager.set_log_file('Loggggggg.log', 'a')
 ```
 
-##TODO:
-- [ ] Detect conflicts with system hotkeys.
-- [ ] Suppress the last key after triggering a hotkey.
-- [ ] Support to trigger hotkeys on pressed or on released.
+## TODO:
+- [ ] Detect conflicts with system hotkeys
+- [ ] Suppress the last key after triggering a hotkey
+- [x] ~~Support to trigger hotkeys on press or on release~~ Use wetkey instead

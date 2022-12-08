@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from contextlib import contextmanager
-from ._key import Controller, Listener, WarmKey, HotKey, cold_keys
+from ._key import Controller, Listener, ColdKey, WarmKey, HotKey, WetKey, cold_keys
 from logging import getLogger, CRITICAL, DEBUG, StreamHandler, FileHandler, Formatter
 
 
@@ -25,6 +25,7 @@ class KeyboardManager:
         self.__hotkeys = []
         self.__pressed_keys = []
         self.__released_keys = []
+        self.__wetkeys = {}
         self.__ttl = 5
         self.__interval = 0.5
         self.__block = True
@@ -119,33 +120,37 @@ class KeyboardManager:
             return
         self.__controller.type(string)
 
-    def register_hotkey(self, keys, count, trigger, *args, **kwargs):
+    def register_hotkey(self, keys, count, func, *args, **kwargs):
         """
         :param keys: the key list or tuple.
         :param count: number of pressed times for hotkey with single key.
-        :param trigger: the function invoked when the hotkey is triggered.
-        :param args: the arguments of trigger function.
-        :param kwargs: the keyword arguments of trigger function.
-        :return: positive integer = hotkey id; 0 = Invalid parameters; -1 = the hotkey has been registered.
+        :param func: the function invoked when the hotkey is triggered.
+        :param args: the arguments of "func".
+        :param kwargs: the keyword arguments of "func".
+        :return:
+                positive integer = hotkey id;
+                0 = invalid parameters;
+                -1 = the hotkey has been registered;
+                -2 = conflict with system hotkey.
         """
-        if not callable(trigger):
-            self.__logger.info('【Register 0】"trigger" is not callable')
+        if not callable(func):
+            self.__logger.info('【Register hotkey 0】"func" is not callable')
             return 0
-        if 1 == len(keys) and (not isinstance(count, int) or 0 >= count):
-            self.__logger.info('【Register 0】"count" is not a positive integer')
+        if 1 == len(keys) and (not isinstance(count, int) or 1 >= count):
+            self.__logger.info('【Register hotkey 0】"count" >= 2')
             return 0
         keys = cold_keys(keys)
         length = len(keys)
         if 0 == length:
-            self.__logger.info('【Register 0】Invalid key list: {}'.format(keys))
+            self.__logger.info('【Register hotkey 0】Invalid key list')
             return 0
         if any([length == len(hotkey.keys) and all([k in hotkey.keys for k in keys]) for hotkey in self.__hotkeys]):
-            self.__logger.info('【Register -1】Hotkey: {} has been registered.'.format(keys))
+            self.__logger.info('【Register hotkey -1】Hotkey: {} has been registered.'.format(keys))
             return -1
-        hot_key = HotKey(self.__id, trigger, keys, count, *args, **kwargs)
-        self.__hotkeys.append(hot_key)
+        hotkey = HotKey(self.__id, func, keys, count, *args, **kwargs)
+        self.__hotkeys.append(hotkey)
         self.__id += 1
-        self.__logger.info('【Register 1】{}'.format(hot_key))
+        self.__logger.info('【Register hotkey 1】{}'.format(hotkey))
         return self.__id - 1
 
     def unregister_hotkey_by_id(self, id_):
@@ -157,9 +162,9 @@ class KeyboardManager:
             for hotkey in self.__hotkeys:
                 if id_ == hotkey.id:
                     self.__hotkeys.remove(hotkey)
-                    self.__logger.info('【Unregister 1】{}'.format(hotkey))
+                    self.__logger.info('【Unregister hotkey 1】{}'.format(hotkey))
                     return True
-        self.__logger.info("【Unregister 0】the hotkey id: {} doesn't exist".format(id_))
+        self.__logger.info("【Unregister hotkey 0】the hotkey id: {} doesn't exist".format(id_))
         return False
 
     def unregister_hotkey_by_keys(self, keys):
@@ -170,30 +175,128 @@ class KeyboardManager:
         keys = cold_keys(keys)
         length = len(keys)
         if 0 == length:
-            self.__logger.info('【Unregister 0】Invalid key list: {}'.format(keys))
+            self.__logger.info('【Unregister hotkey 0】Invalid key list: {}'.format(keys))
             return False
         for hotkey in self.__hotkeys:
             if length == len(hotkey.keys) and all([k in hotkey.keys for k in keys]):
                 self.__hotkeys.remove(hotkey)
-                self.__logger.info('【Unregister 1】{}'.format(hotkey))
+                self.__logger.info('【Unregister hotkey 1】{}'.format(hotkey))
                 return True
-        self.__logger.info("【Unregister 0】the hotkey: {} doesn't exists".format(keys))
+        self.__logger.info("【Unregister hotkey 0】the hotkey: {} doesn't exists".format(keys))
         return False
 
     def unregister_all_hotkeys(self):
-        """Unregister all hotkeys."""
         self.__hotkeys.clear()
-        self.__logger.info("【Unregister 1】all hotkeys")
+        self.__logger.info("【Unregister hotkey 1】all hotkeys")
         return True
 
-    def __exec_trigger(self, hotkey):
+    def __set_wetkey(self, key, on_press, func, *args, **kwargs):
+        if not callable(func):
+            self.__logger.info('【Set wetkey 0】"func" is not callable')
+            return False
+        key = ColdKey.from_object(key)
+        if key is None:
+            self.__logger.info('【Set wetkey 0】Invalid key')
+            return False
+        wetkey = self.__wetkeys.get(repr(key)) or WetKey(key)
+        if on_press:
+            wetkey.set_func_on_press(func, *args, **kwargs)
+        else:
+            wetkey.set_func_on_release(func, *args, **kwargs)
+        self.__wetkeys[repr(key)] = wetkey
+        self.__logger.info('【Set wetkey 1】{}'.format(wetkey))
+        return True
+
+    def set_wetkey_on_press(self, key, func, *args, **kwargs):
+        """
+        Set a wetkey for key press event.
+        :param key: target key.
+        :param func: the function invoked when "key" is pressed.
+        :param args: the arguments of "func".
+        :param kwargs: the keyword arguments of "func".
+        :rtype: bool.
+        """
+        return self.__set_wetkey(key, 1, func, *args, **kwargs)
+
+    def set_wetkey_on_release(self, key, func, *args, **kwargs):
+        """
+        Set a wetkey for key release event.
+        :param key: target key.
+        :param func: the function invoked when "key" is released.
+        :param args: the arguments of "func".
+        :param kwargs: the keyword arguments of "func".
+        :rtype: bool.
+        """
+        return self.__set_wetkey(key, 0, func, *args, **kwargs)
+
+    def __remove_wetkey(self, key, on_press=None):
+        key = ColdKey.from_object(key)
+        if key is None:
+            self.__logger.info('【Remove wetkey 0】Invalid key')
+            return False
+        wet_key = self.__wetkeys.get(repr(key))
+        if wet_key:
+            if None is on_press:
+                self.__wetkeys.pop(repr(key))
+                self.__logger.info('【Remove wetkey 1】{}'.format(key))
+            elif on_press:
+                wet_key.clear_on_press()
+                self.__logger.info('【Remove wetkey on press】{}'.format(key))
+            else:
+                wet_key.clear_on_release()
+                self.__logger.info('【Remove wetkey on release】{}'.format(key))
+            return True
+        else:
+            self.__logger.info('【Remove wetkey -1】The key: {} is not monitored'.format(key))
+            return False
+
+    def remove_wetkey(self, key):
+        """
+        Remove a wetkey for key press and release event.
+        :param key: target key.
+        :rtype: bool.
+        """
+        return self.__remove_wetkey(key)
+
+    def remove_wetkey_on_press(self, key):
+        """
+        Remove a wetkey for key press event.
+        :param key: target key.
+        :rtype: bool.
+        """
+        return self.__remove_wetkey(key, 1)
+
+    def remove_wetkey_on_release(self, key):
+        """
+        Remove a wetkey for key release event.
+        :param key: target key.
+        :rtype: bool.
+        """
+        return self.__remove_wetkey(key, 0)
+
+    def remove_all_wetkeys(self):
+        self.__wetkeys.clear()
+        self.__logger.info('【Remove all wetkeys】')
+        return True
+
+    def __trigger_hotkey(self, hotkey):
         try:
             self.__logger.info('【HotKey triggered】{}'.format(hotkey))
-            hotkey.trigger()
+            hotkey()
         except Exception as e:
             e_type = str(type(e))
             self.__logger.error('''【HotKey exception】 {}:
 {}: {}'''.format(hotkey, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
+
+    def __trigger_wetkey(self, wetkey, on_press):
+        try:
+            self.__logger.info('【WetKey triggered on {}】{}'.format('press' if on_press else 'release', wetkey.key))
+            wetkey(on_press)
+        except Exception as e:
+            e_type = str(type(e))
+            self.__logger.error('''【WetKey exception on {}】 {}:
+{}: {}'''.format('press' if on_press else 'release', wetkey.key,
+                 e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
 
     def __start_recording_hotkey(self, callback, type_):
         if self.__recording_state:
@@ -278,6 +381,10 @@ class KeyboardManager:
             if 1 < len(self.__pressed_keys):
                 self.__recording_callback(self.__pressed_keys)
                 return
+        if not self.__pressed_keys:
+            wetkey = self.__wetkeys.get(repr(key))
+            if wetkey and wetkey.on_press:
+                self.__trigger_wetkey(wetkey, 1)
         if self.__update_pressed_keys(key, True):
             return
         if not self.__recording_state:
@@ -289,10 +396,10 @@ class KeyboardManager:
                 continue
             if self.__strict_mode:
                 if length_hotkey == length and all([k in self.__pressed_keys for k in hotkey.keys]):
-                    self.__exec_trigger(hotkey)
+                    self.__trigger_hotkey(hotkey)
                     return
             elif all([k in self.__pressed_keys for k in hotkey.keys]):
-                self.__exec_trigger(hotkey)
+                self.__trigger_hotkey(hotkey)
                 return
 
     def __on_release(self, key):
@@ -303,6 +410,10 @@ class KeyboardManager:
         if 2 == self.__recording_state:
             self.__pressed_keys = [k for k in self.__pressed_keys if k != key]
             return
+        if 1 == len(self.__pressed_keys):
+            wet_key = self.__wetkeys.get(repr(key))
+            if wet_key and wet_key.on_release:
+                self.__trigger_wetkey(wet_key, 0)
         self.__update_pressed_keys(key, False)
         self.__update_released_keys(key)
         if not self.__recording_state:
@@ -311,16 +422,20 @@ class KeyboardManager:
             if 1 == len(hotkey.keys):
                 for k in self.__released_keys:
                     if hotkey.keys[0] == k and hotkey.count == k.n:
-                        self.__exec_trigger(hotkey)
+                        self.__trigger_hotkey(hotkey)
                         return
+
+    @property
+    def hotkeys(self):
+        return self.__hotkeys.copy()
 
     @property
     def pressed_keys(self):
         return self.__pressed_keys.copy()
 
     @property
-    def hotkeys(self):
-        return self.__hotkeys.copy()
+    def wetkeys(self):
+        return self.__wetkeys.items()
 
     @property
     def recording(self):
@@ -363,9 +478,7 @@ class KeyboardManager:
     def start(self):
         if self.running:
             return
-        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release,)
-                                   # win32_event_filter=self.__filter_win32,
-                                   # darwin_intercept=self.__filter_darwin)
+        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release)
         self.__listener.start()
         self.__logger.debug('【Keyboard listener started】——————————————————>')
 

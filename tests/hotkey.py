@@ -1,5 +1,7 @@
+from sys import path
+from os.path import pardir
+path.append(pardir)
 from time import sleep
-from os.path import join
 from PyHotKey import Key, keyboard_manager as manager
 # from pynput.keyboard import Key, Controller
 
@@ -15,8 +17,8 @@ def hotkey():
     x, y = 4, 3
     manager.logger = True
     manager.ttl = 2
-    key_id1 = manager.register_hotkey(lambda o: print(o), ['Z', Key.shift_l], None, 23333333)
-    key_id2 = manager.register_hotkey(lambda x: print('【X】{}'.format(x)), [Key.ctrl_l], 3, 777)
+    key_id1 = manager.register_hotkey(['Z', Key.shift_l], None, lambda o: print(o), 23333333)
+    key_id2 = manager.register_hotkey([Key.ctrl_l], 3, lambda x: print('【X】{}'.format(x)), 777)
     print(manager.hotkeys)
     # manager.start_recording_hotkey_single(lambda k: print(k))
     n = 0
@@ -25,7 +27,7 @@ def hotkey():
             x = 230
             with manager.pressed(Key.shift) as r:
                 if r:
-                    manager.press('Z')
+                    manager.press('X')
             print('————————————————————————End——————————————————————')
             # break
             # manager.press('z')

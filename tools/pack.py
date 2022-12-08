@@ -16,6 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 """
 Packing tool.
+
+Require packages: pip、twine、wheel.
 """
 from shutil import rmtree
 from subprocess import Popen, PIPE
@@ -99,6 +101,7 @@ def check():
 
 def upload():
     """Upload the new release to PYPI."""
+    # Encoding error ↓↓↓, consider using os.popen...
     print(exec_cmd(TWINE, 'upload', join(ROOT, 'dist', '*')))
 
 
@@ -125,8 +128,6 @@ Command:
     \tp:\t\tPackage new version.
 
     \ti:\t\tInstall current version.
-
-    \tu:\t\tUpload current version.
     '''
     if 2 != len(argv):
         print(note)
@@ -140,9 +141,9 @@ Command:
         check()
     elif 'i' == ch:
         install()
-    elif 'u' == ch:
-        if 'y' == input('Upload to PYPI (y/n)? '):
-            upload()
+    # elif 'u' == ch:
+    #     if 'y' == input('Upload to PYPI (y/n)? '):
+    #         upload()
     else:
         print(note)
 

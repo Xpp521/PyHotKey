@@ -28,27 +28,39 @@ class ColdKey(KeyCode):
         else:
             super().__init__(vk, char.lower() if char else None, False, **kwargs)
 
-    def __compare_cold_key(self, other):
+    @classmethod
+    def from_object(cls, obj):
+        """
+        Create a ColdKey from an unknown object.
+        :param obj: unknown object.
+        :return: a ColdKey or None.
+        """
+        if isinstance(obj, cls):
+            return obj
+        elif isinstance(obj, WarmKey):
+            return obj.to_cold_key()
+        elif isinstance(obj, str) and 1 == len(obj):
+            return cls(char=obj)
+        elif isinstance(obj, (Key, KeyCode)):
+            return cls(obj)
+        else:
+            return None
+
+    def __eq__(self, other):
+        other = self.from_object(other)
+        if other is None:
+            return False
         if self.char and other.char:
             return self.char == other.char
         else:
             return self.vk == other.vk
-
-    def __eq__(self, other):
-        if isinstance(other, ColdKey):
-            return self.__compare_cold_key(other)
-        elif isinstance(other, (Key, ColdKey)):
-            return self.__compare_cold_key(ColdKey(other))
-        elif isinstance(other, str) and 1 == len(other):
-            return self.__compare_cold_key(ColdKey(char=other))
-        return False
 
     def __repr__(self):
         return super().__repr__().strip("'")
 
 
 class WarmKey(ColdKey):
-    """WarmKey represent a pressed or just released key."""
+    """WarmKey represents a pressed or just released key."""
     def __init__(self, key, timestamp=None, n=1):
         """
         :param key: a Key or KeyCode.
@@ -86,39 +98,76 @@ class WarmKey(ColdKey):
             self.__n = 1
 
 
+class Function:
+    def __init__(self, func=None, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+    def __call__(self):
+        if self.func:
+            return self.func(*self.args, **self.kwargs)
+
+    def set(self, func, *args, **kwargs):
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+
+
 class HotKey:
-    def __init__(self, _id, trigger, keys, count, *args, **kwargs):
-        self.__trigger = trigger
-        self.__keys = keys
-        self.__count = count if 1 == len(keys) else None
-        self.__id = _id
-        self.__args = args
-        self.__kwargs = kwargs
+    def __init__(self, id_, func, keys, count, *args, **kwargs):
+        self.func = Function(func, *args, **kwargs)
+        self.keys = keys
+        self.count = count if 1 == len(keys) else None
+        self.id = id_
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.__id == other.id
+            return self.id == other.id
         return False
 
     def __repr__(self):
-        if 1 == len(self.__keys):
-            return '<HotKey id={} key={} count={}>'.format(self.__id, self.keys[0], self.__count)
-        return '<HotKey id={} keys=({})>'.format(self.__id, ', '.join([repr(k) for k in self.keys]))
+        if 1 == len(self.keys):
+            return '<HotKey id={} key={} count={}>'.format(self.id, self.keys[0], self.count)
+        return '<HotKey id={} keys=({})>'.format(self.id, ', '.join([repr(k) for k in self.keys]))
 
-    def trigger(self):
-        return self.__trigger(*self.__args, **self.__kwargs)
+    def __call__(self):
+        return self.func()
+
+
+class WetKey:
+    """WetKey represents a monitored key, triggered when a single key is pressed or released."""
+    def __init__(self, cold_key):
+        self.key = cold_key
+        self.func_on_press = Function()
+        self.func_on_release = Function()
+
+    def set_func_on_press(self, func, *args, **kwargs):
+        self.func_on_press.set(func, *args, **kwargs)
+
+    def set_func_on_release(self, func, *args, **kwargs):
+        self.func_on_release.set(func, *args, **kwargs)
+
+    def remove_func_on_press(self):
+        self.func_on_press.func = None
+
+    def remove_func_on_release(self):
+        self.func_on_release.func = None
 
     @property
-    def id(self):
-        return self.__id
+    def on_press(self):
+        return bool(self.func_on_press.func)
 
     @property
-    def keys(self):
-        return self.__keys
+    def on_release(self):
+        return bool(self.func_on_release.func)
 
-    @property
-    def count(self):
-        return self.__count
+    def __call__(self, on_press):
+        return self.func_on_press() if on_press else self.func_on_release()
+
+    def __repr__(self):
+        return '<WetKey key={}{}{}>'.format(self.key, ' on_press' if self.func_on_press.func else '',
+                                            ' on_release' if self.func_on_release.func else '')
 
 
 def cold_keys(keys):
@@ -132,15 +181,8 @@ def cold_keys(keys):
         for key in keys:
             if not key:
                 continue
-            if isinstance(key, WarmKey):
-                k = key.to_cold_key()
-            elif isinstance(key, ColdKey):
-                k = key
-            elif isinstance(key, str):
-                k = ColdKey(char=key[0])
-            elif isinstance(key, (Key, KeyCode)):
-                k = ColdKey(key)
-            else:
+            k = ColdKey.from_object(key)
+            if k is None:
                 continue
             if k not in new_keys:
                 new_keys.append(k)
