@@ -1,4 +1,8 @@
 # Release Note
+## v1.5.0
+- [+] Wetkey: triggered when a single key is pressed or released.
+- [+] Suppress: Suppress the last key after triggering a hotkey.
+___
 ## v1.4.1
 - Add api: "unregister_all_hotkeys".
 - Change the parameter order of "register_hotkey".

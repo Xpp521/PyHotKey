@@ -16,6 +16,8 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from pynput.keyboard._xorg import Key, KeyCode, Controller, Listener as _Listener
 
+filter_name = None
+
 
 class Listener(_Listener):
     def _keycode_to_keysym(self, display, keycode, index):
@@ -24,3 +26,7 @@ class Listener(_Listener):
 
 def pre_process_key(key):
     return key
+
+
+def event_filter():
+    pass

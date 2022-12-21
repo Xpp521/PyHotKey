@@ -70,7 +70,7 @@ def func(key, pressed):
     print('{} is {}'.format(key, 'pressed' if pressed else 'released'))
 
 # Set a wetkey to trigger when "ctrl" is pressed
-r1 = manager.set_wetkey_on_press(Key.ctrl_l, func, 'control', 1)
+r1 = manager.set_wetkey_on_press(Key.ctrl_l, func, 'ctrl', 1)
 
 # Set a wetkey to trigger when "x" is released
 r2 = manager.set_wetkey_on_release('x', func, 'x', 0)
@@ -121,6 +121,11 @@ if 'z' in manager.pressed_keys:
 # Print recording state
 print(manager.recording)
 
+# Suppress the last key after triggering a hotkey
+# With this api, you can even override the function of system hotkeys
+# PS: doesn't work in Linux
+manager.suppress = True
+
 # Strict mode (for hotkeys with multiple keys)
 # The pressed keys must be strictly equal to
 # the hotkey's key list
@@ -162,6 +167,6 @@ manager.set_log_file('Loggggggg.log', 'a')
 ```
 
 ## TODO:
-- [ ] Detect conflicts with system hotkeys
-- [ ] Suppress the last key after triggering a hotkey
+- [ ] ~~Detect conflicts with system hotkeys~~ No longer needed
+- [x] Suppress the last key after triggering a hotkey
 - [x] ~~Support to trigger hotkeys on press or on release~~ Use wetkey instead

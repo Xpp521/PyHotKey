@@ -19,5 +19,4 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 A cross-platform hotkey module for Python.
 """
-from ._key import Key
-from ._manager import keyboard_manager
+from ._manager import Key, keyboard_manager

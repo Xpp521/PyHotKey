@@ -57,16 +57,17 @@ def exec_cmd(*args):
         return stdout.decode('gbk')
 
 
-# Load "twine" and "pip"
+# Load "pip" and "twine"
 if 'win32' == platform:         # Windows
-    TWINE = join(exec_prefix, 'Scripts', 'twine.exe')
     PIP = join(exec_prefix, 'Scripts', 'pip.exe')
+    TWINE = join(exec_prefix, 'Scripts', 'twine.exe')
 elif 'darwin' == platform:      # Mac OS
-    TWINE = join(exec_prefix, 'bin', 'twine')
     PIP = join(exec_prefix, 'bin', 'pip')
+    TWINE = join(exec_prefix, 'bin', 'twine')
+    # TWINE = r'/Users/xpp/.local/bin/twine'
 else:                           # Linux
-    TWINE = join(exec_prefix, 'bin', 'twine')
     PIP = join(exec_prefix, 'bin', 'pip')
+    TWINE = join(exec_prefix, 'bin', 'twine')
 if not exists(PIP):
     raise ModuleNotFoundError("No module named 'pip'")
 if not exists(TWINE):

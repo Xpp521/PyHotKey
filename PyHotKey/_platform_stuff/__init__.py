@@ -20,13 +20,13 @@ Platform stuff.
 from sys import platform
 
 if 'win32' == platform:
-    from .win32 import Key, KeyCode, Controller, Listener, pre_process_key
+    from .win32 import Key, KeyCode, Controller, Listener, pre_process_key, filter_name, event_filter
 elif 'darwin' == platform:
-    from .darwin import Key, KeyCode, Controller, Listener, pre_process_key
+    from .darwin import Key, KeyCode, Controller, Listener, pre_process_key, filter_name, event_filter
 else:
     try:
-        from .xorg import Key, KeyCode, Controller, Listener, pre_process_key
+        from .xorg import Key, KeyCode, Controller, Listener, pre_process_key, filter_name, event_filter
     except ImportError:
         raise
-if not all([Key, KeyCode, Controller, Listener, pre_process_key]):
+if not all([Key, KeyCode, Controller, Listener, pre_process_key, event_filter]):
     raise ImportError('Unsupported platform')

@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from time import time
-from ._platform_stuff import Key, KeyCode, Controller, Listener, pre_process_key
+from ._platform_stuff import Key, KeyCode, Controller, Listener, pre_process_key, filter_name, event_filter
 
 
 class ColdKey(KeyCode):
@@ -35,10 +35,10 @@ class ColdKey(KeyCode):
         :param obj: unknown object.
         :return: a ColdKey or None.
         """
-        if isinstance(obj, cls):
-            return obj
-        elif isinstance(obj, WarmKey):
+        if isinstance(obj, WarmKey):
             return obj.to_cold_key()
+        elif isinstance(obj, cls):
+            return obj
         elif isinstance(obj, str) and 1 == len(obj):
             return cls(char=obj)
         elif isinstance(obj, (Key, KeyCode)):
@@ -46,14 +46,17 @@ class ColdKey(KeyCode):
         else:
             return None
 
+    def __compare(self, other):
+        return self.char == other.char if self.char and other.char else self.vk == other.vk
+
     def __eq__(self, other):
-        other = self.from_object(other)
-        if other is None:
-            return False
-        if self.char and other.char:
-            return self.char == other.char
-        else:
-            return self.vk == other.vk
+        if isinstance(other, ColdKey):
+            return self.__compare(other)
+        elif isinstance(other, (Key, ColdKey)):
+            return self.__compare(ColdKey(other))
+        elif isinstance(other, str) and 1 == len(other):
+            return self.__compare(ColdKey(char=other))
+        return False
 
     def __repr__(self):
         return super().__repr__().strip("'")
@@ -115,11 +118,11 @@ class Function:
 
 
 class HotKey:
-    def __init__(self, id_, func, keys, count, *args, **kwargs):
-        self.func = Function(func, *args, **kwargs)
+    def __init__(self, id_, keys, count, func, *args, **kwargs):
+        self.id = id_
         self.keys = keys
         self.count = count if 1 == len(keys) else None
-        self.id = id_
+        self.func = Function(func, *args, **kwargs)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):

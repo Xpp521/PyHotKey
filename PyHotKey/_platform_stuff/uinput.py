@@ -16,6 +16,12 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from pynput.keyboard._uinput import Key, KeyCode, Controller, Listener
 
+filter_name = None
+
 
 def pre_process(key):
     return key
+
+
+def event_filter():
+    pass

@@ -15,8 +15,8 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from contextlib import contextmanager
-from ._key import Controller, Listener, ColdKey, WarmKey, HotKey, WetKey, cold_keys
 from logging import getLogger, CRITICAL, DEBUG, StreamHandler, FileHandler, Formatter
+from ._key import Key, ColdKey, WarmKey, HotKey, WetKey, cold_keys, Controller, Listener, filter_name, event_filter
 
 
 class KeyboardManager:
@@ -28,7 +28,8 @@ class KeyboardManager:
         self.__wetkeys = {}
         self.__ttl = 5
         self.__interval = 0.5
-        self.__block = True
+        self.__suppress = False
+        self.__triggered = False
         self.__recording_state = 0
         self.__recording_callback = None
         self.__strict_mode = True
@@ -40,7 +41,7 @@ class KeyboardManager:
         self.__logger.addHandler(stream_handler)
         self.logger = False
         self.__controller = Controller()
-        self.__listener = None
+        self._listener = None
         self.start()
 
     # def set_log_level(self, level):
@@ -147,7 +148,7 @@ class KeyboardManager:
         if any([length == len(hotkey.keys) and all([k in hotkey.keys for k in keys]) for hotkey in self.__hotkeys]):
             self.__logger.info('【Register hotkey -1】Hotkey: {} has been registered.'.format(keys))
             return -1
-        hotkey = HotKey(self.__id, func, keys, count, *args, **kwargs)
+        hotkey = HotKey(self.__id, keys, count, func, *args, **kwargs)
         self.__hotkeys.append(hotkey)
         self.__id += 1
         self.__logger.info('【Register hotkey 1】{}'.format(hotkey))
@@ -287,6 +288,9 @@ class KeyboardManager:
             e_type = str(type(e))
             self.__logger.error('''【HotKey exception】 {}:
 {}: {}'''.format(hotkey, e_type[e_type.find("'") + 1: e_type.rfind("'")], e))
+        finally:
+            self.__triggered = True
+            return self.__suppress
 
     def __trigger_wetkey(self, wetkey, on_press):
         try:
@@ -364,7 +368,7 @@ class KeyboardManager:
         t.append(key)
         self.__released_keys = t
 
-    def __on_press(self, key):
+    def _on_press(self, key):
         key = WarmKey(key)
         if 2 == self.__recording_state:
             if key in self.__pressed_keys:
@@ -386,7 +390,8 @@ class KeyboardManager:
             if wetkey and wetkey.on_press:
                 self.__trigger_wetkey(wetkey, 1)
         if self.__update_pressed_keys(key, True):
-            return
+            return self.__triggered
+        self.__triggered = False
         if not self.__recording_state:
             self.__logger.debug('【Key down】{}'.format(key))
         length = len(self.__pressed_keys)
@@ -396,13 +401,11 @@ class KeyboardManager:
                 continue
             if self.__strict_mode:
                 if length_hotkey == length and all([k in self.__pressed_keys for k in hotkey.keys]):
-                    self.__trigger_hotkey(hotkey)
-                    return
+                    return self.__trigger_hotkey(hotkey)
             elif all([k in self.__pressed_keys for k in hotkey.keys]):
-                self.__trigger_hotkey(hotkey)
-                return
+                return self.__trigger_hotkey(hotkey)
 
-    def __on_release(self, key):
+    def _on_release(self, key):
         key = WarmKey(key)
         if 1 == self.__recording_state:
             self.__recording_callback([key])
@@ -422,8 +425,10 @@ class KeyboardManager:
             if 1 == len(hotkey.keys):
                 for k in self.__released_keys:
                     if hotkey.keys[0] == k and hotkey.count == k.n:
-                        self.__trigger_hotkey(hotkey)
-                        return
+                        return self.__trigger_hotkey(hotkey)
+
+    def __event_filter(self, *args, **kwargs):
+        return event_filter(self, *args, **kwargs)
 
     @property
     def hotkeys(self):
@@ -435,11 +440,19 @@ class KeyboardManager:
 
     @property
     def wetkeys(self):
-        return self.__wetkeys.items()
+        return list(self.__wetkeys.values())
 
     @property
     def recording(self):
         return self.__recording_state
+
+    @property
+    def suppress(self):
+        return self.__suppress
+
+    @suppress.setter
+    def suppress(self, v):
+        self.__suppress = bool(v)
 
     @property
     def strict_mode(self):
@@ -473,23 +486,25 @@ class KeyboardManager:
 
     @property
     def running(self):
-        return self.__listener.running if self.__listener else False
+        return self._listener.running if self._listener else False
 
     def start(self):
         if self.running:
             return
-        self.__listener = Listener(on_press=self.__on_press, on_release=self.__on_release)
-        self.__listener.start()
+        self._listener = Listener(on_press=lambda k: self._on_press(k) or True,
+                                  on_release=lambda k: self._on_release(k) or True) if filter_name is None \
+            else Listener(**{filter_name: self.__event_filter})
+        self._listener.start()
         self.__logger.debug('【Keyboard listener started】——————————————————>')
 
     def wait(self):
-        self.__listener.wait()
+        self._listener.wait()
 
     def stop(self):
         self.__recording_state = 0
         self.__pressed_keys.clear()
         self.__released_keys.clear()
-        self.__listener.stop()
+        self._listener.stop()
         self.__logger.debug('【Keyboard listener ended】<——————————————————')
 
 
