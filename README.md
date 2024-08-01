@@ -32,7 +32,7 @@ keyboard.press(Key.space)
 # Release
 keyboard.release('z')
 
-# Tap (on_press and release)
+# Tap (press and release)
 keyboard.tap('x')
 
 # Do something while holding down certain keys
@@ -64,7 +64,7 @@ id2 = keyboard.register_hotkey([Key.caps_lock], 3, func,
 
 # Unregister hotkey by keys
 r1 = keyboard.unregister_hotkey_by_keys([Key.ctrl_l, Key.alt_l, 'z'])
-r2 = keyboard.unregister_hotkey_by_keys([Key.caps_lock], 2)
+r2 = keyboard.unregister_hotkey_by_keys([Key.caps_lock], 3)
 
 # Unregister hotkey by hotkey id
 r3 = keyboard.unregister_hotkey_by_id(id2)
@@ -83,7 +83,7 @@ keyboard.suppress_hotkey = True
 
 # ttl: time to live (for hotkeys with multiple keys)
 # When a key is pressed for more than "ttl" seconds,
-# it will be ignored in the next key on_press/release event.
+# it will be ignored in the next press/release event.
 keyboard.ttl = 7
 
 # Interval: the max interval time between each tap
@@ -110,7 +110,7 @@ keyboard.stop_recording_hotkey()
 # Print recording state
 print(keyboard.recording_state)
 ```
-***PS***: Check the example: [Recording.py](https://github.com/Xpp521/PyHotKey/tree/master/examples).
+***Check*** → [Recording.py](https://github.com/Xpp521/PyHotKey/tree/master/examples/Recording.py).
 
 ### MagicKey
 MagicKey can change the behaviour of a single key:
@@ -144,7 +144,7 @@ print(keyboard.magickeys)
 # PS3: May cause unknown bugs, be careful
 keybord.suppress_magickey = True
 ```
-***PS***: Check the example: [magickey.py](https://github.com/Xpp521/PyHotKey/tree/master/examples).
+***Check*** → [magickey.py](https://github.com/Xpp521/PyHotKey/tree/master/examples/magickey.py).
 
 ### Other APIs
 ```python
