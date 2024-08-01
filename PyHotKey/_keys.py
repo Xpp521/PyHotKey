@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (C) 2019-2023 Xpp521
+# Copyright (C) 2019-2024 Xpp521
 #
 # This program is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by the Free
@@ -15,11 +15,12 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 from time import time
-from ._platform_stuff import Key, KeyCode, Controller, Listener, pre_process_key, filter_name, event_filter
+from ._platform_stuff import Key, KeyCode, pre_process_key
 
 
 class ColdKey(KeyCode):
     """ColdKey = KeyCode + Key"""
+
     def __init__(self, key=None, vk=None, char=None, **kwargs):
         if isinstance(key, Key):
             super().__init__(key.value.vk, key.name)
@@ -64,6 +65,7 @@ class ColdKey(KeyCode):
 
 class WarmKey(ColdKey):
     """WarmKey represents a pressed or just released key."""
+
     def __init__(self, key, timestamp=None, n=1):
         """
         :param key: a Key or KeyCode.
@@ -102,44 +104,73 @@ class WarmKey(ColdKey):
 
 
 class Function:
-    def __init__(self, func=None, *args, **kwargs):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
+    """Store a function with its parameters, you can call it later"""
 
-    def __call__(self):
-        if self.func:
-            return self.func(*self.args, **self.kwargs)
+    def __init__(self, function=None, *args, **kwargs):
+        self.__func = None
+        self.__args = None
+        self.__kwargs = None
+        if not self.set(function, *args, **kwargs):
+            raise TypeError("'func' must be a callable object or None")
 
-    def set(self, func, *args, **kwargs):
-        self.func = func
-        self.args = args
-        self.kwargs = kwargs
+    def __call__(self, *args, **kwargs):
+        """Call the function.
+        If 'args' and 'kwargs' are None, the stored parameters will be used instead."""
+        if None is self.__func:
+            return None
+        return self.__func(*args, **kwargs) if args or kwargs \
+            else self.__func(*self.__args, **self.__kwargs)
+
+    @property
+    def callable(self):
+        return None is not self.__func
+
+    def set(self, func=None, *args, **kwargs):
+        """Set function and its parameters, or use 'None' to clear the old function"""
+        if None is func:
+            self.__func = None
+            self.__args = None
+            self.__kwargs = None
+            return True
+        if callable(func):
+            self.__func = func
+            self.__args = args
+            self.__kwargs = kwargs
+            return True
+        return False
 
 
 class HotKey:
-    def __init__(self, id_, keys, count, func, *args, **kwargs):
-        self.id = id_
+    def __init__(self, keys, count, func, *args, **kwargs):
         self.keys = keys
         self.count = count if 1 == len(keys) else None
         self.func = Function(func, *args, **kwargs)
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
-            return self.id == other.id
+            length = len(self.keys)
+            if length == len(other.keys) and all((k in other.keys for k in self.keys)):
+                if 1 == length and self.count != other.count:
+                    return False
+                return True
         return False
 
     def __repr__(self):
         if 1 == len(self.keys):
-            return '<HotKey id={} key={} count={}>'.format(self.id, self.keys[0], self.count)
-        return '<HotKey id={} keys=({})>'.format(self.id, ', '.join([repr(k) for k in self.keys]))
+            return '<HotKey key={} count={}>'.format(self.keys[0], self.count)
+        return '<HotKey keys=({})>'.format(', '.join([repr(k) for k in self.keys]))
 
     def __call__(self):
         return self.func()
 
 
-class WetKey:
-    """WetKey represents a monitored key, triggered when a single key is pressed or released."""
+class MagicKey:
+    """MagicKey can change the behaviour of a single key:
+
+    - Suppress the original function (Doesn't work in Linux).
+    - Bind 2 functions for pressed and released event.
+    """
+
     def __init__(self, cold_key):
         self.key = cold_key
         self.func_on_press = Function()
@@ -159,25 +190,25 @@ class WetKey:
 
     @property
     def on_press(self):
-        return bool(self.func_on_press.func)
+        return self.func_on_press.callable
 
     @property
     def on_release(self):
-        return bool(self.func_on_release.func)
+        return self.func_on_release.callable
 
     def __call__(self, on_press):
         return self.func_on_press() if on_press else self.func_on_release()
 
     def __repr__(self):
-        return '<WetKey key={}{}{}>'.format(self.key, ' on_press' if self.func_on_press.func else '',
-                                            ' on_release' if self.func_on_release.func else '')
+        return '<MagicKey key={}{}{}>'.format(self.key, ' on_press' if self.func_on_press.callable else '',
+                                            ' on_release' if self.func_on_release.callable else '')
 
 
-def cold_keys(keys):
+def to_cold_keys(keys):
     """
     Convert a key list or tuple to a ColdKey list and remove duplicate keys.
     :param keys: key list or tuple.
-    :return: cold key list.
+    :rtype: list.
     """
     new_keys = []
     if keys and isinstance(keys, (list, tuple)):

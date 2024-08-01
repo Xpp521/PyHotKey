@@ -2,7 +2,7 @@ from sys import path
 from os.path import pardir
 path.append(pardir)
 from time import sleep
-from PyHotKey import Key, keyboard_manager as manager
+from PyHotKey import Key, keyboard as manager
 # from pynput.keyboard import Key, Controller
 
 
@@ -30,9 +30,9 @@ def hotkey():
                     manager.press('X')
             print('————————————————————————End——————————————————————')
             # break
-            # manager.press('z')
-            # manager.press(Key.ctrl_l)
-            # manager.press(Key.alt_l)
+            # manager.on_press('z')
+            # manager.on_press(Key.ctrl_l)
+            # manager.on_press(Key.alt_l)
             # manager.RegisterHotKey(func, [Key.caps_lock])
             # manager.setLogPath(join('log', 'log.txt'))
             # manager.logger = False

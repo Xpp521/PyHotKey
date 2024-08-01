@@ -1,4 +1,11 @@
 # Release Note
+## v1.5.2
+- [Fix] some hotkey can't be recorded.
+- [Change] Hotkeys with single keystroke won't be triggered if the tapping is interrupted.
+- [Change] Rename several apis.
+- [Change] Rebuild logging function.
+- [Remove] "strict mode".
+___
 ## v1.5.0
 - [+] Wetkey: triggered when a single key is pressed or released.
 - [+] Suppress: Suppress the last key after triggering a hotkey.

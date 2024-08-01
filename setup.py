@@ -8,7 +8,7 @@ PACKAGE_NAME = 'PyHotKey'
 PACKAGE_URL = 'https://github.com/Xpp521/PyHotKey'
 
 # The runtime requirements
-INSTALL_REQUIRES = ['pynput==1.7.6']
+INSTALL_REQUIRES = ['pynput==1.7.7']
 
 # Additional requirements used during setup
 SETUP_REQUIRES = []
@@ -46,7 +46,7 @@ except IOError:
 setup(
     name=INFO.get('NAME'),
     version=INFO.get('VERSION'),
-    description='A cross-platform hotkey module.',
+    description='A cross-platform keyboard module.',
     long_description=README + CHANGES,
     long_description_content_type='text/markdown',
     author=INFO.get('AUTHOR'),
