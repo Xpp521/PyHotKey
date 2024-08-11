@@ -59,8 +59,8 @@ else:
 
 # Register a hotkey (single key)
 # 3 means tap three times to trigger the hotkey (must >= 2)
-id2 = keyboard.register_hotkey([Key.caps_lock], 3, func,
-                               func_arg1, func_arg2, func_arg3=233)
+id2 = keyboard.register_hotkey([Key.caps_lock], 3,
+                               func, func_arg1, func_arg2=233)
 
 # Unregister hotkey by keys
 r1 = keyboard.unregister_hotkey_by_keys([Key.ctrl_l, Key.alt_l, 'z'])
@@ -110,20 +110,20 @@ keyboard.stop_recording_hotkey()
 # Print recording state
 print(keyboard.recording_state)
 ```
-***Check*** → [Recording.py](https://github.com/Xpp521/PyHotKey/tree/master/examples/Recording.py).
+***Check*** -> [Recording.py](https://github.com/Xpp521/PyHotKey/tree/master/examples/Recording.py).
 
 ### MagicKey
 MagicKey can change the behaviour of a single key:
 - trigger functions for pressed and released event.
 - Suppress the original function.
 ```python
-# Set a magickey to trigger when "ctrl" is pressed (suppress)
+# Set a magickey to trigger when "ctrl" is pressed
 r1 = keyboard.set_magickey_on_press(Key.ctrl_l, func,
-                                  func_arg1, func_arg2=233)
+                                    func_arg1, func_arg2=233)
 
-# Set a magickey to trigger when "x" is released (don't suppress)
+# Set a magickey to trigger when "x" is released
 r2 = keyboard.set_magickey_on_release('x', func,
-                                    func_arg1, func_arg2='Xpp')
+                                      func_arg1, func_arg2='Xpp')
 
 # Remove the magickey triggered when x is pressed
 r3 = keyboard.remove_magickey_on_press('x')
@@ -144,7 +144,7 @@ print(keyboard.magickeys)
 # PS3: May cause unknown bugs, be careful
 keybord.suppress_magickey = True
 ```
-***Check*** → [magickey.py](https://github.com/Xpp521/PyHotKey/tree/master/examples/magickey.py).
+***Check*** -> [magickey.py](https://github.com/Xpp521/PyHotKey/tree/master/examples/magickey.py).
 
 ### Other APIs
 ```python
